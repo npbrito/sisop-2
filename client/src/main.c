@@ -20,7 +20,7 @@ int main(int argc, char* argv[argc+1])
     Inet_pton(AF_INET, argv[1], &servaddr.sin_addr);
     Connect(sockfd, (SA *) &servaddr, sizeof servaddr);
 
-    char recvline[MAXLINE + 1];
+    char recvline[MAXLINE+1];
     ssize_t n;
 
     while ( (n = Read(sockfd, recvline, MAXLINE)) > 0) {
