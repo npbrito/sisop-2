@@ -1,4 +1,3 @@
-#include <sys/socket.h>
 #include "wrapsock.h"
 #include "error.h"
 
@@ -10,4 +9,10 @@ int Socket(int family, int type, int protocol)
 		err_sys("socket error");
 
 	return(n);
+}
+
+void Connect(int fd, const struct sockaddr *sa, socklen_t salen)
+{
+	if (connect(fd, sa, salen) < 0)
+		err_sys("connect error");
 }
