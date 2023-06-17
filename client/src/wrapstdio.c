@@ -1,3 +1,4 @@
+#include "error.h"
 #include "wrapstdio.h"
 
 void Fputs(const char* ptr, FILE* stream)

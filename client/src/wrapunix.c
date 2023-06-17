@@ -1,4 +1,5 @@
 #include <unistd.h>
+#include "error.h"
 #include "wrapunix.h"
 
 ssize_t Read(int fd, void* ptr, size_t nbytes)
