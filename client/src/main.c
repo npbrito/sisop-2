@@ -19,7 +19,7 @@ int main(int argc, char* argv[argc+1])
     servaddr.sin_family = AF_INET;
 	servaddr.sin_port = htons(str_to_port(argv[3]));
     Inet_pton(AF_INET, argv[2], &servaddr.sin_addr);
-    Connect(sockfd, (SA *) &servaddr, sizeof servaddr);
+    Connect(sockfd, (SA*) &servaddr, sizeof servaddr);
 
     char recvline[MAXLINE+1];
     ssize_t n;
