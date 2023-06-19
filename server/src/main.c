@@ -22,11 +22,11 @@ int main(int argc, char* argv[argc+1])
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
 	servaddr.sin_port = htons(str_to_port(argv[1]));
-    Bind(listenfd, (SA *) &servaddr, sizeof servaddr);
+    Bind(listenfd, (SA*) &servaddr, sizeof servaddr);
     Listen(listenfd, LISTENQ);
 
     while (true) {
-        int connfd = Accept(listenfd, (SA *) NULL, NULL);
+        int connfd = Accept(listenfd, (SA*) NULL, NULL);
         time_t ticks = time(NULL);
         char buff[MAXLINE];
         snprintf(buff, sizeof buff, "%.24s\r\n", ctime(&ticks));
