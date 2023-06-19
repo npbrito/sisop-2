@@ -16,7 +16,6 @@ typedef struct conndata {
     int connfd;
 } conndata_t;
 
-
 static void* doit(void* arg);
 
 int main(int argc, char* argv[argc+1])
