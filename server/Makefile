@@ -1,6 +1,6 @@
 TARGET = myServer
 CC     = gcc
-CFLAGS = -Wall -I.
+CFLAGS = -Wall -g -I -lnsl.
 
 LINKER = gcc
 LFLAGS = -Wall -I.
