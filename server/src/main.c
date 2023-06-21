@@ -47,7 +47,6 @@ int main(int argc, char* argv[argc+1])
         struct sockaddr_in cliaddr;
         socklen_t len = sizeof cliaddr;
         int connfd = Accept(listenfd, (SA*) &cliaddr, &len);
-        
         conndata_t* conndata = Malloc(sizeof(conndata_t));
         conndata->cliaddr = cliaddr;
         conndata->connfd = connfd;
@@ -68,18 +67,21 @@ static void* doit(void* arg)
            Inet_ntop(AF_INET, &conndata.cliaddr.sin_addr, buff, sizeof buff),
            ntohs(conndata.cliaddr.sin_port));
 
-    ssize_t n;
-    packet_t packet;
-    if ( (n = Readn(conndata.connfd, &packet, 4*sizeof(uint32_t))) == 0)
-        goto cleanup;   // Connection closed by other end
+    while (true) {
+        ssize_t n;
+        packet_t packet;
 
-    packet.data = Malloc(packet.data_length);
+        if ( (n = Readn(conndata.connfd, &packet, 4*sizeof(uint32_t))) == 0)
+            goto cleanup;
 
-    if ( (n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
-        goto cleanup;   // Connection closed by other end
+        packet.data = Malloc(packet.data_length);
 
-    Fputs(packet.data, stdout);
-    free(packet.data);
+        if ( (n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
+            goto cleanup;
+
+        Fputs(packet.data, stdout);
+        free(packet.data);
+    }
 
 cleanup:
     Close(conndata.connfd);
