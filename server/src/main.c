@@ -9,7 +9,16 @@
 #include "wrapinet.h"
 #include "wrappthread.h"
 #include "wrapsock.h"
+#include "wrapstdio.h"
 #include "wrapunix.h"
+
+typedef struct packet {
+    uint32_t type;
+    uint32_t seqn;
+    uint32_t max_seqn;
+    uint32_t data_length;
+    char* data;
+} packet_t;
 
 typedef struct conndata {
     struct sockaddr_in cliaddr;
@@ -38,6 +47,7 @@ int main(int argc, char* argv[argc+1])
         struct sockaddr_in cliaddr;
         socklen_t len = sizeof cliaddr;
         int connfd = Accept(listenfd, (SA*) &cliaddr, &len);
+        
         conndata_t* conndata = Malloc(sizeof(conndata_t));
         conndata->cliaddr = cliaddr;
         conndata->connfd = connfd;
@@ -57,9 +67,21 @@ static void* doit(void* arg)
     printf("connection from %s, port %d\n",
            Inet_ntop(AF_INET, &conndata.cliaddr.sin_addr, buff, sizeof buff),
            ntohs(conndata.cliaddr.sin_port));
-    time_t ticks = time(NULL);
-    snprintf(buff, sizeof buff, "%.24s\r\n", ctime(&ticks));
-    Write(conndata.connfd, buff, strlen(buff));
+
+    ssize_t n;
+    packet_t packet;
+    if ( (n = Readn(conndata.connfd, &packet, 4*sizeof(uint32_t))) == 0)
+        goto cleanup;   // Connection closed by other end
+
+    packet.data = Malloc(packet.data_length);
+
+    if ( (n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
+        goto cleanup;   // Connection closed by other end
+
+    Fputs(packet.data, stdout);
+    free(packet.data);
+
+cleanup:
     Close(conndata.connfd);
     return NULL;
 }

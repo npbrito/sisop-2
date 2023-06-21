@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+ssize_t Readn(int fd, void* ptr, size_t nbytes);
+void Writen(int fd, void* ptr, size_t nbytes);
 uint16_t str_to_port(const char* str);
 
 #endif
