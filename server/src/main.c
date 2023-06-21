@@ -1,8 +1,11 @@
 #include <arpa/inet.h>
+#include <net/if.h>
+#include <netdb.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/ioctl.h>
 #include <time.h>
 #include "error.h"
 #include "util.h"
@@ -12,25 +15,30 @@
 #include "wrapstdio.h"
 #include "wrapunix.h"
 
-typedef struct packet {
+#define h_addr h_addr_list[0]
+
+typedef struct packet
+{
     uint32_t type;
     uint32_t seqn;
     uint32_t max_seqn;
     uint32_t data_length;
-    char* data;
+    char *data;
 } packet_t;
 
-typedef struct conndata {
+typedef struct conndata
+{
     struct sockaddr_in cliaddr;
     int connfd;
 } conndata_t;
 
-static void* doit(void* arg);
+static void *doit(void *arg);
 
-int main(int argc, char* argv[argc+1])
+int main(int argc, char *argv[argc + 1])
 {
-    if (argc != 2) {
-        fprintf(stderr, "usage: ./myServer <port>\n");
+    if (argc != 1)
+    {
+        fprintf(stderr, "usage: ./myServer\n");
         return EXIT_FAILURE;
     }
 
@@ -39,16 +47,25 @@ int main(int argc, char* argv[argc+1])
     memset(&servaddr, 0, sizeof servaddr);
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-	servaddr.sin_port = htons(str_to_port(argv[1]));
-    Bind(listenfd, (SA*) &servaddr, sizeof servaddr);
+    // Allocate port dynamically 
+    servaddr.sin_port = 0;
+    Bind(listenfd, (SA *)&servaddr, sizeof servaddr);
     Listen(listenfd, LISTENQ);
 
-    while (true) {
+    socklen_t len = sizeof servaddr;
+    getsockname(listenfd, (SA *)&servaddr, &len);
+
+    // TODO: Get current IP address
+
+    fprintf(stdout, "Server listen on port %d\n", ntohs(servaddr.sin_port));
+
+    while (true)
+    {
         struct sockaddr_in cliaddr;
         socklen_t len = sizeof cliaddr;
-        int connfd = Accept(listenfd, (SA*) &cliaddr, &len);
-        
-        conndata_t* conndata = Malloc(sizeof(conndata_t));
+        int connfd = Accept(listenfd, (SA *)&cliaddr, &len);
+
+        conndata_t *conndata = Malloc(sizeof(conndata_t));
         conndata->cliaddr = cliaddr;
         conndata->connfd = connfd;
         pthread_t tid;
@@ -58,9 +75,9 @@ int main(int argc, char* argv[argc+1])
     return EXIT_SUCCESS;
 }
 
-static void* doit(void* arg)
+static void *doit(void *arg)
 {
-    conndata_t conndata = *(conndata_t*) arg;
+    conndata_t conndata = *(conndata_t *)arg;
     free(arg);
     Pthread_detach(pthread_self());
     char buff[MAXLINE];
@@ -70,13 +87,13 @@ static void* doit(void* arg)
 
     ssize_t n;
     packet_t packet;
-    if ( (n = Readn(conndata.connfd, &packet, 4*sizeof(uint32_t))) == 0)
-        goto cleanup;   // Connection closed by other end
+    if ((n = Readn(conndata.connfd, &packet, 4 * sizeof(uint32_t))) == 0)
+        goto cleanup; // Connection closed by other end
 
     packet.data = Malloc(packet.data_length);
 
-    if ( (n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
-        goto cleanup;   // Connection closed by other end
+    if ((n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
+        goto cleanup; // Connection closed by other end
 
     Fputs(packet.data, stdout);
     free(packet.data);
