@@ -45,15 +45,17 @@ int main(int argc, char *argv[argc + 1])
     servaddr.sin_addr = *((struct in_addr *)server->h_addr);
     Connect(sockfd, (SA *)&servaddr, sizeof servaddr);
 
-    char sendline[MAXLINE + 1];
-    Fgets(sendline, MAXLINE, stdin);
+    char username[strlen(argv[1]) + 1];
+    strcpy(username, argv[1]);
+
     packet_t packet;
     packet.type = 0;
     packet.seqn = 1;
     packet.max_seqn = 1;
-    packet.data_length = strlen(sendline) + 1;
+    packet.data_length = strlen(username) + 1;
+    // Sending username to connect on server
     Writen(sockfd, &packet, 4 * sizeof(uint32_t));
-    Writen(sockfd, sendline, packet.data_length);
+    Writen(sockfd, username, packet.data_length);
 
     return EXIT_SUCCESS;
 }
