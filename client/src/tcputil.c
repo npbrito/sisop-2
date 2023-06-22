@@ -9,7 +9,7 @@ int tcp_connect(char const* host, char const* serv)
 {
 	struct addrinfo	hints;
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_INET;
+	hints.ai_family = AF_UNSPEC;
 	hints.ai_socktype = SOCK_STREAM;
 	int n;
 	struct addrinfo* res;
