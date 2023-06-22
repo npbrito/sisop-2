@@ -99,11 +99,16 @@ static void *doit(void *arg)
     if ((n = Readn(conndata.connfd, packet.data, packet.data_length)) == 0)
         goto cleanup; // Connection closed by other end
 
-    Fputs(packet.data, stdout);
+    // Fputs(packet.data, stdout);
 
-    if(!checkDirExists(packet.data)){
+    // TODO: Check if first access to this thread
+    user_t *user = malloc(sizeof (struct user_t*));
+    user->username = malloc( sizeof (packet.data));
+    user->username = packet.data;
+    user->dir = malloc(strlen(SYNC_DIR) + strlen(packet.data) + 1);
+    if(!checkDirExists(user->dir)){
         pthread_mutex_lock(&mutex);
-        createUserDir(packet.data);
+        createUserDir(user->username);
         pthread_mutex_unlock(&mutex);
     }
 

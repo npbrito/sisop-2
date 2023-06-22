@@ -24,7 +24,7 @@ void Pthread_detach(pthread_t tid)
 	err_sys("pthread_detach error");
 }
 
-void Pthread_mutex_init(pthread_mutex_t* mutex, const pthread_attr_t*)
+void Pthread_mutex_init(pthread_mutex_t* mutex, pthread_mutexattr_t *attr)
 {
 	int	n;
 

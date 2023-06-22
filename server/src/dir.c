@@ -1,40 +1,38 @@
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <pthread.h>
+#include <unistd.h>
 #include <errno.h>
 #include "error.h"
 #include "dir.h"
 
-pthread_mutex_t mutex;
-
-user_t createUserDir(const char *username)
+void createUserDir(char *username)
 {
-  fprintf(stdout, "createUserDir %s\n", username);
-  user_t user;
-  user.username = strdup(username);
-  user.dir = NULL;
+  char *dir = malloc(strlen(SYNC_DIR) + strlen(username) + 1);
+  strcpy(dir, SYNC_DIR);
+  strcat(dir, username);
 
-  int n = mkdir(username, 0700);
-
-  if (n == 0)
+  if (!checkDirExists(SYNC_DIR))
   {
-    user.dir = strdup(username);
+    mkdir(SYNC_DIR, 0700);
   }
-  else
+
+  int n = mkdir(dir, 0700);
+
+  free(dir);
+
+  if (n != 0)
   {
     err_sys("createUserDir error");
   }
-
-  return user;
 }
 
-bool checkDirExists(const char *dir)
+bool checkDirExists(char *dir)
 {
-  fprintf(stdout, "checkDirExists %s\n", dir);
-
   struct stat st;
   if (stat(dir, &st) == 0)
   {
@@ -46,7 +44,7 @@ bool checkDirExists(const char *dir)
   return false;
 }
 
-// stat_t getDir(const char *)
+// stat_t getDir(char *)
 // {
 //   // TODO:
 // }

@@ -1,19 +1,16 @@
-#ifndef USER_H
-#define USER_H
+#ifndef DIR_H
+#define DIR_H
 
 #include <sys/stat.h>
+#include "user.h"
+
+#define SYNC_DIR "sync_dir/"
 
 typedef struct stat stat_t;
 
-typedef struct user
-{
-  char *username;
-  char *dir;
-} user_t;
+void createUserDir(char *);
 
-user_t createUserDir(const char *);
-
-bool checkDirExists(const char *);
-// stat_t getDir(const char*);
+bool checkDirExists(char *);
+// stat_t getDir(char*);
 
 #endif
