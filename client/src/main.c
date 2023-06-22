@@ -6,8 +6,6 @@
 #include "command.h"
 #include "tcputil.h"
 #include "util.h"
-#include "wrapinet.h"
-#include "wrapsock.h"
 #include "wrapstdio.h"
 #include "wrapunix.h"
 #include "error.h"

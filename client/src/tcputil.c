@@ -3,7 +3,6 @@
 #include <string.h>
 #include "error.h"
 #include "tcputil.h"
-#include "wrapsock.h"
 #include "wrapunix.h"
 
 int tcp_connect(char const* host, char const* serv)
