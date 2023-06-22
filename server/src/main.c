@@ -14,6 +14,8 @@
 #include "wrapsock.h"
 #include "wrapstdio.h"
 #include "wrapunix.h"
+#include "tcputil.h"
+#include "sockutil.h"
 
 typedef struct packet
 {
@@ -32,26 +34,24 @@ typedef struct conndata
 
 static void *doit(void *arg);
 
-int main()
+int main(int argc, char* argv[argc+1])
 {
-    int listenfd = Socket(AF_INET, SOCK_STREAM, 0);
-    struct sockaddr_in servaddr;
-    memset(&servaddr, 0, sizeof servaddr);
-    servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
-    servaddr.sin_port = 0;  // Allocate port dynamically 
-    Bind(listenfd, (SA*)&servaddr, sizeof servaddr);
-    Listen(listenfd, LISTENQ);
-    socklen_t len = sizeof servaddr;
-    getsockname(listenfd, (SA*)&servaddr, &len);
-    printf("Server listening on port %d\n", ntohs(servaddr.sin_port));
-    // TODO: Get current IP address in a portable way
+    int listenfd;
+    socklen_t addrlen;
+
+    if (argc == 2)      // IPv6 Server on dual-stack host
+        listenfd = Tcp_listen(NULL, argv[1], &addrlen); 
+    else if (argc == 3) // IPv4 or IPv6 depending on host argument
+        listenfd = Tcp_listen(argv[1], argv[2], &addrlen); 
+    else
+        err_quit("usage: ./myServer [ <host> ] <service/port#>\n");
 
     while (true)
     {
         struct sockaddr_in cliaddr;
         socklen_t len = sizeof cliaddr;
         int connfd = Accept(listenfd, (SA*) &cliaddr, &len);
+        printf("Connection from %s\n", Sock_ntop((SA*) &cliaddr, len));
         conndata_t* conndata = Malloc(sizeof(conndata_t));
         conndata->cliaddr = cliaddr;
         conndata->connfd = connfd;
@@ -67,10 +67,6 @@ static void* doit(void* arg)
     conndata_t conndata = *(conndata_t*) arg;
     free(arg);
     Pthread_detach(pthread_self());
-    char buff[MAXLINE];
-    printf("Connection from IP: %s, PORT: %d\n",
-           Inet_ntop(AF_INET, &conndata.cliaddr.sin_addr, buff, sizeof buff),
-           ntohs(conndata.cliaddr.sin_port));
 
     while (true) {
         ssize_t n;

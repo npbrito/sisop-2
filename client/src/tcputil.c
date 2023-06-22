@@ -32,7 +32,7 @@ int tcp_connect(char const* host, char const* serv)
 		if (connect(sockfd, res->ai_addr, res->ai_addrlen) == 0)
 			break;		// Success
 
-		Close(sockfd);	// Ignore this one. Connect failed.
+		Close(sockfd);	// Ignore this one. Connect error.
 	} while ( (res = res->ai_next) != NULL);
 
 	if (res == NULL)	// errno set from final connect()

@@ -42,6 +42,13 @@ void Listen(int fd, int backlog)
 		err_sys("listen error");
 }
 
+void Setsockopt(int fd, int level, int optname, void const* optval, socklen_t optlen)
+{
+	if (setsockopt(fd, level, optname, optval, optlen) < 0)
+		err_sys("setsockopt error");
+}
+
+
 int Socket(int family, int type, int protocol)
 {
 	int	n;
