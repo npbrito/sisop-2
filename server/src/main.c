@@ -7,6 +7,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <time.h>
+#include "dir.h"
 #include "error.h"
 #include "util.h"
 #include "wrapinet.h"
@@ -17,6 +18,8 @@
 
 #define h_addr h_addr_list[0]
 
+pthread_mutex_t mutex;
+ 
 typedef struct packet
 {
     uint32_t type;
@@ -69,7 +72,9 @@ int main(int argc, char *argv[argc + 1])
         conndata->cliaddr = cliaddr;
         conndata->connfd = connfd;
         pthread_t tid;
+        Pthread_mutex_init(&mutex, NULL);
         Pthread_create(&tid, NULL, &doit, conndata);
+        Pthread_mutex_destroy(&mutex);
     }
 
     return EXIT_SUCCESS;
@@ -84,7 +89,6 @@ static void *doit(void *arg)
     printf("connection from %s, port %d\n",
            Inet_ntop(AF_INET, &conndata.cliaddr.sin_addr, buff, sizeof buff),
            ntohs(conndata.cliaddr.sin_port));
-
     ssize_t n;
     packet_t packet;
     if ((n = Readn(conndata.connfd, &packet, 4 * sizeof(uint32_t))) == 0)
@@ -96,6 +100,13 @@ static void *doit(void *arg)
         goto cleanup; // Connection closed by other end
 
     Fputs(packet.data, stdout);
+
+    if(!checkDirExists(packet.data)){
+        pthread_mutex_lock(&mutex);
+        createUserDir(packet.data);
+        pthread_mutex_unlock(&mutex);
+    }
+
     free(packet.data);
 
 cleanup:

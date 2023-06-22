@@ -26,6 +26,7 @@ int main(int argc, char *argv[argc + 1])
         fprintf(stderr, "usage: ./myClient <username> <server_ip_address> <port>\n");
         return EXIT_FAILURE;
     }
+
     struct hostent *server;
     server = gethostbyname(argv[2]);
     if (server == NULL)
@@ -34,14 +35,11 @@ int main(int argc, char *argv[argc + 1])
         exit(0);
     }
 
-    fprintf(stdout, "%s", server->h_addr);
-
     int sockfd = Socket(AF_INET, SOCK_STREAM, 0);
     struct sockaddr_in servaddr;
     memset(&servaddr, 0, sizeof servaddr);
     servaddr.sin_family = AF_INET;
     servaddr.sin_port = htons(str_to_port(argv[3]));
-    // Inet_pton(AF_INET, argv[2], &servaddr.sin_addr);
     servaddr.sin_addr = *((struct in_addr *)server->h_addr);
     Connect(sockfd, (SA *)&servaddr, sizeof servaddr);
 
