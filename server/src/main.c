@@ -40,7 +40,7 @@ int main()
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     servaddr.sin_port = 0;  // Allocate port dynamically 
-    Bind(listenfd, (SA *)&servaddr, sizeof servaddr);
+    Bind(listenfd, (SA*)&servaddr, sizeof servaddr);
     Listen(listenfd, LISTENQ);
     socklen_t len = sizeof servaddr;
     getsockname(listenfd, (SA*)&servaddr, &len);
@@ -62,9 +62,9 @@ int main()
     return EXIT_SUCCESS;
 }
 
-static void *doit(void *arg)
+static void* doit(void* arg)
 {
-    conndata_t conndata = *(conndata_t *)arg;
+    conndata_t conndata = *(conndata_t*) arg;
     free(arg);
     Pthread_detach(pthread_self());
     char buff[MAXLINE];
@@ -76,7 +76,7 @@ static void *doit(void *arg)
         ssize_t n;
         packet_t packet;
 
-        if ( (n = Readn(conndata.connfd, &packet, 4*sizeof(uint32_t))) == 0)
+        if ( (n = Readn(conndata.connfd, &packet, 4 * sizeof(uint32_t))) == 0)
             goto cleanup; // Client closed the connection
 
         packet.data = Malloc(packet.data_length);

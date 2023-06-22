@@ -1,6 +1,6 @@
 #ifndef UTIL_H
 #define UTIL_H
-
+#include <sys/types.h>
 #include <stdint.h>
 
 ssize_t Readn(int fd, void* ptr, size_t nbytes);

@@ -16,3 +16,13 @@ void Fputs(const char* ptr, FILE* stream)
 	if (fputs(ptr, stream) == EOF)
 		err_sys("fputs error");
 }
+
+ssize_t Getline(char** lineptr, size_t* n, FILE* stream)
+{
+	ssize_t c;
+
+	if ( (c = getline(lineptr, n, stream)) == -1)
+		err_sys("getline error");
+
+	return c;
+}
