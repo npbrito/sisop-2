@@ -1,6 +1,6 @@
 TARGET = myClient
 CC     = gcc
-CFLAGS = -Wall -I.
+CFLAGS = -D_POSIX_C_SOURCE=200809L -Wall -I.
 
 LINKER = gcc
 LFLAGS = -Wall -I.

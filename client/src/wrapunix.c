@@ -2,12 +2,18 @@
 #include "error.h"
 #include "wrapunix.h"
 
-ssize_t Read(int fd, void* ptr, size_t nbytes)
+void Close(int fd)
 {
-    ssize_t	n;
+	if (close(fd) == -1)
+		err_sys("close error");
+}
 
-	if ( (n = read(fd, ptr, nbytes)) == -1)
-		err_sys("read error");
+void* Malloc(size_t size)
+{
+	void *ptr;
 
-	return n;
+	if ( (ptr = malloc(size)) == NULL)
+		err_sys("malloc error");
+
+	return ptr;
 }

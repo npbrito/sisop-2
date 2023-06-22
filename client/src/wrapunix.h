@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-ssize_t Read(int fd, void* ptr, size_t nbytes);
+void Close(int fd);
+void* Malloc(size_t size);
 
 #endif

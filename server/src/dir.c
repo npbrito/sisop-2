@@ -12,12 +12,13 @@
 
 void createUserDir(char *username)
 {
-  char *dir = malloc(strlen(SYNC_DIR) + strlen(username) + 1);
-  strcpy(dir, SYNC_DIR);
-  strcat(dir, username);
+  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 1) * sizeof(char)));
+  strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
+  strncat(dir, username, strlen(username) + 1);
 
   if (!checkDirExists(SYNC_DIR))
   {
+    // TODO: Move mutex here
     mkdir(SYNC_DIR, 0700);
   }
 
@@ -31,7 +32,7 @@ void createUserDir(char *username)
   }
 }
 
-bool checkDirExists(char *dir)
+bool checkDirExists(const char *dir)
 {
   struct stat st;
   if (stat(dir, &st) == 0)
