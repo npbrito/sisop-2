@@ -1,16 +1,10 @@
-#include <netdb.h>
-#include <netinet/in.h>
-#include <string.h>
-#include <sys/types.h>
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include "command.h"
 #include "tcputil.h"
-#include "util.h"
-#include "wrapstdio.h"
-#include "wrapunix.h"
-#include "error.h"
 
-int main(int argc, char *argv[argc+1])
+int main(int argc, char* argv[argc+1])
 {
     if (argc != 4) {
         fprintf(stderr, "usage: ./myClient <username> <hostname/IPaddress> <service/port#>\n");
