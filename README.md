@@ -7,4 +7,4 @@ usuário.
 ## Features
 
 - [X] Alocar Porta dinamicamente
-- [ ] Mostar IP da máquina do servidor no terminal
+- [X] Mostar IP da máquina do servidor no terminal
