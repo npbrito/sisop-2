@@ -17,7 +17,7 @@ char* read_command()
 void send_command(int sockfd, char* str)
 {
     packet_t packet = {
-        .type = 0,  // CMD
+        .type = 1,  // CMD
         .seqn = 1,
         .max_seqn = 1,
         .data_length = strlen(str) + 1,  // str + '\0',

@@ -15,6 +15,7 @@
 #include "packet.h"
 #include "user.h"
 #include "command.h"
+#include "data.h"
 
 static void *handler(void *arg);
 
@@ -50,12 +51,17 @@ static void* handler(void* arg)
     setup_user(user);
 
     while (true) {
-        char* cmd = recv_command(conndata.connfd);
-        printf("Command: %s", cmd);
-        free(cmd);
+        packet_t packet = recv_packet(conndata.connfd);
+
+        if (packet.type == COMMAND)
+            parse_command(packet.data, conndata.connfd);
+        else
+            parse_data(packet, conndata.connfd);
+
+        free(packet.data);
     }
 
     Close(conndata.connfd);
-    
+
     return NULL;
 }
