@@ -36,6 +36,12 @@ void Connect(int fd, const struct sockaddr* sa, socklen_t salen)
 		err_sys("connect error");
 }
 
+void Getsockname(int fd, struct sockaddr* sa, socklen_t* salenptr)
+{
+	if (getsockname(fd, sa, salenptr) < 0)
+		err_sys("getsockname error");
+}
+
 void Listen(int fd, int backlog)
 {
 	if (listen(fd, backlog) < 0)

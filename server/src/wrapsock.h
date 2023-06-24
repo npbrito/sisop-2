@@ -7,6 +7,7 @@
 int Accept(int fd, struct sockaddr* sa, socklen_t* salenptr);
 void Bind(int fd, const struct sockaddr* sa, socklen_t salen);
 void Connect(int fd, const struct sockaddr* sa, socklen_t salen);
+void Getsockname(int fd, struct sockaddr* sa, socklen_t* salenptr);
 void Listen(int fd, int backlog);
 void Setsockopt(int fd, int level, int optname, void const* optval, socklen_t optlen);
 int Socket(int family, int type, int protocol);

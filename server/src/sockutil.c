@@ -3,58 +3,57 @@
 #include <string.h>
 #include "error.h"
 #include "sockutil.h"
+#include "wrapinet.h"
+#include "wrapsock.h"
+#include "wrappthread.h"
+#include "wrapunix.h"
 
-char* sock_ntop(struct sockaddr const* sa, socklen_t salen)
+void print_server(int listenfd)
 {
-    char portstr[8];
-    static char str[128];		/* Unix domain is largest */
+	struct sockaddr_in servaddr;
+	socklen_t len = sizeof servaddr;
+	Getsockname(listenfd, (SA*) &servaddr, &len);
+	uint16_t port = ntohs(servaddr.sin_port);
 
-	switch (sa->sa_family) {
-	case AF_INET: {
-		struct sockaddr_in* sin = (struct sockaddr_in*) sa;
+	// Uses UDP Socket to get local network address
+	int sockfd = Socket(AF_INET, SOCK_DGRAM, 0);
+	struct sockaddr_in cliaddr;
+	memset(&cliaddr, 0, sizeof cliaddr);
+	cliaddr.sin_family = AF_INET;
+	cliaddr.sin_port = 0;
+	Inet_pton(AF_INET, "8.8.8.8", &cliaddr.sin_addr); 
+	Connect(sockfd, (SA *) &cliaddr, sizeof cliaddr);
+	len = sizeof cliaddr;
+	Getsockname(sockfd, (SA *) &cliaddr, &len);
 
-		if (inet_ntop(AF_INET, &sin->sin_addr, str, sizeof(str)) == NULL)
-			return(NULL);
-
-		if (ntohs(sin->sin_port) != 0) {
-			snprintf(portstr, sizeof(portstr), ":%d", ntohs(sin->sin_port));
-			strcat(str, portstr);
-		}
-
-		return str;
-	}
-
-	case AF_INET6: {
-		struct sockaddr_in6* sin6 = (struct sockaddr_in6*) sa;
-		str[0] = '[';
-
-		if (inet_ntop(AF_INET6, &sin6->sin6_addr, str + 1, sizeof(str) - 1) == NULL)
-			return NULL;
-
-		if (ntohs(sin6->sin6_port) != 0) {
-			snprintf(portstr, sizeof(portstr), "]:%d", ntohs(sin6->sin6_port));
-			strcat(str, portstr);
-			return str;
-		}
-
-		return str + 1;
-	}
-
-	default:
-		snprintf(str, sizeof(str), "sock_ntop: unknown AF_xxx: %d, len %d",
-				 sa->sa_family, salen);
-		return str;
-	}
-
-    return NULL;
+	char buff[MAXLINE];
+	printf("Server listening on IP: %s PORT: %hu\n", 
+		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+		   port);
 }
 
-char* Sock_ntop(struct sockaddr const* sa, socklen_t salen)
+void print_client(struct sockaddr_in cliaddr)
 {
-	char* ptr;
+	char buff[MAXLINE];
+	printf("Client connecting from IP: %s PORT: %hu\n", 
+		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+		   ntohs(cliaddr.sin_port));
+}
 
-	if ( (ptr = sock_ntop(sa, salen)) == NULL)
-		err_sys("sock_ntop error");     // inet_ntop() sets errno 
+conndata_t* accept_connection(int listenfd)
+{
+	struct sockaddr_in cliaddr;
+    socklen_t len = sizeof cliaddr;
+    int connfd = Accept(listenfd, (SA*) &cliaddr, &len);
+    conndata_t* conndata = Malloc(sizeof(conndata_t));
+    conndata->cliaddr = cliaddr;
+    conndata->connfd = connfd;
 
-	return ptr;
+	return conndata;
+}
+
+void handle_connection(conndata_t* conndata, void* (*handler)(void*))
+{
+	pthread_t tid;
+    Pthread_create(&tid, NULL, handler, conndata);
 }

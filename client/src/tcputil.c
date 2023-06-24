@@ -9,7 +9,7 @@ int tcp_connect(char const* host, char const* serv)
 {
 	struct addrinfo	hints;
 	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
+	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	int n;
 	struct addrinfo* res;
@@ -23,11 +23,9 @@ int tcp_connect(char const* host, char const* serv)
 
 	do {
 		sockfd = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+
 		if (sockfd < 0)
-			// Ignore this one. It is not a fatal error.
-			// Could happen if an IPv6 address is returned 
-			// but the host kernel does not support IPv6.
-			continue;	
+			continue;
 
 		if (connect(sockfd, res->ai_addr, res->ai_addrlen) == 0)
 			break;		// Success
