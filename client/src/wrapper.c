@@ -1,6 +1,21 @@
 #include <unistd.h>
 #include "error.h"
-#include "wrapunix.h"
+#include "wrapper.h"
+
+// stdio.h functions
+
+ssize_t Getline(char** lineptr, size_t* n, FILE* stream)
+{
+	ssize_t c;
+
+	if ( (c = getline(lineptr, n, stream)) == -1)
+		err_sys("getline error");
+
+	return c;
+}
+
+
+// Unix System Calls
 
 void Close(int fd)
 {

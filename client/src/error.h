@@ -3,11 +3,11 @@
 
 #define	MAXLINE	4096 // Max text line length
 
-void err_dump(const char *, ...);
-void err_msg(const char *, ...);
-void err_quit(const char *, ...);
-void err_ret(const char *, ...);
-void err_sys(const char *, ...);
+void err_dump(char const*, ...);
+void err_msg(char const*, ...);
+void err_quit(char const*, ...);
+void err_ret(char const*, ...);
+void err_sys(char const*, ...);
 
 #endif
 

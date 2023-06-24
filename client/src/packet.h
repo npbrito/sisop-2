@@ -2,6 +2,9 @@
 #define PACKET_H
 #include <stdint.h>
 
+#define COMMAND 1
+#define DATA 2
+
 typedef struct packet
 {
     uint32_t type;

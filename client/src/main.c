@@ -14,7 +14,7 @@ int main(int argc, char* argv[argc+1])
 
     while (true) {
         char* cmd = read_command();
-        send_command(sockfd, cmd);
+        parse_command(cmd, sockfd);
         free(cmd);
     }
 

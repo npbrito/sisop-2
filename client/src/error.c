@@ -5,11 +5,11 @@
 #include <string.h>
 #include "error.h"
 
-static void	err_doit(int, const char*, va_list);
+static void	err_doit(int, char const*, va_list);
 
 // Nonfatal error related to system call
 // Print message and return
-void err_ret(const char* fmt, ...)
+void err_ret(char const* fmt, ...)
 {
 	va_list	ap;
 
@@ -20,7 +20,7 @@ void err_ret(const char* fmt, ...)
 
 // Fatal error related to system call
 // Print message and terminate
-void err_sys(const char* fmt, ...)
+void err_sys(char const* fmt, ...)
 {
 	va_list	ap;
 
@@ -32,7 +32,7 @@ void err_sys(const char* fmt, ...)
 
 // Fatal error related to system call
 // Print message, dump core, and terminate
-void err_dump(const char* fmt, ...)
+void err_dump(char const* fmt, ...)
 {
 	va_list	ap;
 
@@ -45,7 +45,7 @@ void err_dump(const char* fmt, ...)
 
 // Nonfatal error unrelated to system call
 // Print message and return
-void err_msg(const char* fmt, ...)
+void err_msg(char const* fmt, ...)
 {
 	va_list	ap;
 
@@ -56,7 +56,7 @@ void err_msg(const char* fmt, ...)
 
 // Fatal error unrelated to system call
 // Print message and terminate
-void err_quit(const char* fmt, ...)
+void err_quit(char const* fmt, ...)
 {
 	va_list	ap;
 
@@ -68,9 +68,9 @@ void err_quit(const char* fmt, ...)
 
 // Print message and return to caller
 // Caller specifies "errnoflag"
-static void err_doit(int errnoflag, const char* fmt, va_list ap)
+static void err_doit(int errnoflag, char const* fmt, va_list ap)
 {
-	char buf[MAXLINE + 1];
+	char buf[MAXLINE+1];
 
 	vsnprintf(buf, MAXLINE, fmt, ap);
 	int n = strlen(buf);

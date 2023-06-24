@@ -1,7 +1,7 @@
 #include <errno.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include "error.h"
 #include "util.h"
 
@@ -11,9 +11,9 @@ ssize_t	readn(int fd, void *vptr, size_t n)
 	size_t nleft;
 	ssize_t	nread;
 	char* ptr;
-
 	ptr = vptr;
 	nleft = n;
+
 	while (nleft > 0) {
 		if ( (nread = read(fd, ptr, nleft)) < 0) {
 			if (errno == EINTR)
@@ -46,9 +46,9 @@ ssize_t	writen(int fd, const void* vptr, size_t n)
 	size_t nleft;
 	ssize_t nwritten;
 	const char* ptr;
-
 	ptr = vptr;
 	nleft = n;
+
 	while (nleft > 0) {
 		if ( (nwritten = write(fd, ptr, nleft)) <= 0) {
 			if (nwritten < 0 && errno == EINTR)
@@ -60,9 +60,9 @@ ssize_t	writen(int fd, const void* vptr, size_t n)
 		nleft -= nwritten;
 		ptr   += nwritten;
 	}
+
 	return n;
 }
-/* end writen */
 
 void Writen(int fd, void* ptr, size_t nbytes)
 {
