@@ -5,7 +5,7 @@
 #include "wrapunix.h"
 #include "error.h"
 
-char* readcmd()
+char* read_command()
 {
     size_t len = MAXLINE * sizeof(char);
     char* buff = Malloc(len);
@@ -14,7 +14,7 @@ char* readcmd()
     return buff;
 }
 
-void sendcmd(int sockfd, char* str)
+void send_command(int sockfd, char* str)
 {
     packet_t packet = {
         .type = 0,  // CMD
@@ -24,5 +24,5 @@ void sendcmd(int sockfd, char* str)
         .data = str
     };
 
-    sendpckt(sockfd, packet);
+    send_packet(sockfd, packet);
 }

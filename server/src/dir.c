@@ -10,13 +10,13 @@
 #include "error.h"
 #include "dir.h"
 
-void createUserDir(char *username)
+void create_user_dir(char *username)
 {
   char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 1) * sizeof(char)));
   strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
   strncat(dir, username, strlen(username) + 1);
 
-  if (!checkDirExists(SYNC_DIR))
+  if (!check_dir_exists(SYNC_DIR))
   {
     // TODO: Move mutex here
     mkdir(SYNC_DIR, 0700);
@@ -32,20 +32,15 @@ void createUserDir(char *username)
   }
 }
 
-bool checkDirExists(const char *dir)
+int check_dir_exists(const char *dir)
 {
   struct stat st;
   if (stat(dir, &st) == 0)
   {
     if (S_ISDIR(st.st_mode))
     {
-      return true;
+      return 1;
     }
   }
-  return false;
+  return 0;
 }
-
-// stat_t getDir(char *)
-// {
-//   // TODO:
-// }

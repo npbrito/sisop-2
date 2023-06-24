@@ -2,15 +2,12 @@
 #define DIR_H
 
 #include <sys/stat.h>
-#include "user.h"
 
 static const char SYNC_DIR[] = "sync_dir/";
 
 typedef struct stat stat_t;
 
-void createUserDir(char *);
-
-bool checkDirExists(const char *);
-// stat_t getDir(char*);
+void create_user_dir(char* username);
+int check_dir_exists(char const* dir);
 
 #endif

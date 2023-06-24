@@ -1,6 +1,6 @@
 TARGET = myServer
 CC     = gcc
-CFLAGS = -Wall -g -I -lnsl.
+CFLAGS = -D_POSIX_C_SOURCE=200112L -Wall -g -I -lnsl.
 
 LINKER = gcc
 LFLAGS = -Wall -I.

@@ -1,9 +1,8 @@
 #ifndef UTIL_H
 #define UTIL_H
-
-#include <stdint.h>
+#include <sys/types.h>
 
 ssize_t Readn(int fd, void* ptr, size_t nbytes);
-uint16_t str_to_port(const char* str);
+void Writen(int fd, void* ptr, size_t nbytes);
 
 #endif
