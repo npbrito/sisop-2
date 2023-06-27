@@ -2,6 +2,14 @@
 #define SOCKUTIL_H
 #include <netinet/in.h>
 
+#include "client.h"
+#include "device.h"
+
+typedef struct connlist {
+    client_t* clients;
+    conndata_t* conndata;
+} connlist_t;
+
 typedef struct conndata
 {
     struct sockaddr_in cliaddr;

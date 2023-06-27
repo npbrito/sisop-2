@@ -13,15 +13,18 @@
 #include "user.h"
 #include "command.h"
 #include "data.h"
+#include "client.h"
 
-static void *handler(void *arg);
+
+
+static void* handler(void* arg);
 
 int main(int argc, char* argv[argc+1])
 {
     int listenfd;
 
     if (argc == 1)  // Use any free port
-        listenfd = Tcp_listen(NULL); 
+        listenfd = Tcp_listen(NULL);
     else if (argc == 2)
         listenfd = Tcp_listen(argv[1]);
     else
@@ -29,9 +32,17 @@ int main(int argc, char* argv[argc+1])
 
     print_server(listenfd);
 
+    client_t* clients = NULL;
+
     while (true) {
         conndata_t* conndata = accept_connection(listenfd);
-        handle_connection(conndata, &handler);
+
+        connlist_t connlist = {
+            .clients = clients,
+            .conndata = conndata,
+        };
+
+        handle_connection(&connlist, &handler);
     }
 
     return EXIT_SUCCESS;
@@ -39,12 +50,18 @@ int main(int argc, char* argv[argc+1])
 
 static void* handler(void* arg)
 {
-    conndata_t conndata = *(conndata_t *)arg;
+    connlist_t connlist = *(connlist_t*) arg;
     free(arg);
     Pthread_detach(pthread_self());
+    client_t* clients = (connlist.clients);
+    conndata_t conndata = *(connlist.conndata);
 
     print_client(conndata.cliaddr);
     user_t user = recv_user(conndata.connfd);
+    int device_id = recv_device_id(conndata.connfd);
+
+    
+
     setup_user(user);
 
     while (true) {

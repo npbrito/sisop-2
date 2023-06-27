@@ -52,8 +52,8 @@ conndata_t* accept_connection(int listenfd)
 	return conndata;
 }
 
-void handle_connection(conndata_t* conndata, void* (*handler)(void*))
+void handle_connection(connlist_t* connlist, void* (*handler)(void*))
 {
 	pthread_t tid;
-    Pthread_create(&tid, NULL, handler, conndata);
+    Pthread_create(&tid, NULL, handler, connlist);
 }
