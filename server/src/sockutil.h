@@ -37,9 +37,10 @@ typedef struct connlist
 
 void add_device(device_t *head, int id, conndata_t cmdconn);
 device_t *get_device_by_id(device_t *head, int id);
-int recv_device_id(int sockfd);
+uint32_t recv_id(int sockfd);
 void add_client(client_t *head, user_t user, device_t device);
 conndata_t *accept_connection(int listenfd);
+client_t *get_client_by_user(client_t *clients, char const *username);
 void handle_connection(connlist_t *connlist, void *(*handler)(void *));
 void print_client(struct sockaddr_in cliaddr);
 void print_server(int sockfd);

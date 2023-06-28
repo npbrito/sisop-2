@@ -109,14 +109,14 @@ device_t *get_device_by_id(device_t *head, int id)
 	return NULL;
 }
 
-int recv_device_id(int sockfd)
+uint32_t recv_id(int sockfd)
 {
 	packet_t packet = recv_packet(sockfd);
 	size_t len = strlen(packet.data) + 1; // + 1 because of '\0'
-	uint32_t device_id = str_to_int(packet.data);
+	uint32_t id = str_to_int(packet.data);
 	free(packet.data);
 
-	return device_id;
+	return id;
 }
 
 uint32_t str_to_int(const char *str)
@@ -129,4 +129,18 @@ uint32_t str_to_int(const char *str)
 		err_quit("invalid device id error");
 
 	return (uint32_t)val;
+}
+
+client_t *get_client_by_user(client_t *head, char const *username)
+{
+	client_t *current = head;
+
+	while (current != NULL)
+	{
+		if (!strcmp(username, current->user.username))
+			return current;
+		current = current->next;
+	}
+
+	return NULL;
 }

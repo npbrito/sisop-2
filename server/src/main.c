@@ -29,10 +29,15 @@ int main(int argc, char *argv[argc + 1])
 
     print_server(listenfd);
 
+    client_t *clients = NULL;
+
     while (true)
     {
         conndata_t *conndata = accept_connection(listenfd);
-        handle_connection(conndata, &handler);
+        connlist_t connlist = {
+            .clients = clients,
+            .conndata = conndata};
+        handle_connection(&connlist, &handler);
     }
 
     return EXIT_SUCCESS;
@@ -40,13 +45,42 @@ int main(int argc, char *argv[argc + 1])
 
 static void *handler(void *arg)
 {
-    conndata_t conndata = *(conndata_t *)arg;
+    connlist_t connlist = *(connlist_t *)arg;
     free(arg);
     Pthread_detach(pthread_self());
+    conndata_t conndata = *(connlist.conndata);
+    client_t *clients = connlist.clients;
 
     print_client(conndata.cliaddr);
     user_t user = recv_user(conndata.connfd);
     setup_user(user);
+    uint32_t device_id = recv_id(conndata.connfd);
+    uint32_t conn_id = recv_id(conndata.connfd);
+
+    switch (conn_id)
+    {
+    case 1:
+        client_t *client = get_client_by_user(clients, user.username);
+        if (client == NULL)
+        {
+            device_t device = {
+                .id = device_id,
+                .cmdconn = conndata,
+                .next = NULL};
+            add_client(clients, user, device);
+        }
+        else
+        {
+        }
+
+        break;
+    case 2:
+        break;
+    case 3:
+        break;
+    default:
+        err_quit("Invalid connection ID.");
+    }
 
     while (true)
     {
