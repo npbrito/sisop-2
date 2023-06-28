@@ -65,12 +65,24 @@ void send_command(int sockfd, char* str)
     send_packet(sockfd, packet);
 }
 
+// TODO: send current user and device
 void cmd_upload(int sockfd, char const* arg)
 {
+    // TODO: verify if file exists
+
+    char* filename = strrchr(arg, '/');
+    
+    if (filename != NULL) {
+        filename++;
+    }
+
     char buff[MAXLINE];
-    sprintf(buff, "upload %s", arg);
+    sprintf(buff, "upload %s", filename);
     send_command(sockfd, buff);
-    printf("upload command with %s as argument\n", arg);
+    printf("upload command with %s as argument\n", filename);
+
+    // Making new packet according with file
+    // TODO: create new packet -> part file in n bytes and send to client
 }
 
 void cmd_download(int sockfd, char const* arg)
