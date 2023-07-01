@@ -3,10 +3,7 @@
 #include <string.h>
 #include "error.h"
 #include "sockutil.h"
-#include "wrapinet.h"
-#include "wrapsock.h"
-#include "wrappthread.h"
-#include "wrapunix.h"
+#include "wrapper.h"
 
 void print_server(int listenfd)
 {
@@ -52,24 +49,24 @@ conndata_t *accept_connection(int listenfd)
 	return conndata;
 }
 
-void handle_connection(connlist_t *connlist, void *(*handler)(void *))
+void handle_connection(conndata_t *conndata, void *(*handler)(void *))
 {
 	pthread_t tid;
-	Pthread_create(&tid, NULL, handler, connlist);
+	Pthread_create(&tid, NULL, handler, conndata);
 }
 
-void add_client(client_t *head, user_t user, device_t device)
+void add_client(client_t **head, user_t user, device_t device)
 {
-	if (head == NULL)
-	{
-		head = Malloc(sizeof(client_t));
-		head->user = user;
-		head->devices = device;
-		head->next->next = NULL;
+	if (*head == NULL)
+	{	
+		*head = Malloc(sizeof(client_t));
+		(*head)->user = user;
+		(*head)->devices = device;
+		(*head)->next = NULL;
 	}
 	else
 	{
-		client_t *current = head;
+		client_t *current = *head;
 
 		while (current->next != NULL)
 			current = current->next;
@@ -112,7 +109,6 @@ device_t *get_device_by_id(device_t *head, int id)
 uint32_t recv_id(int sockfd)
 {
 	packet_t packet = recv_packet(sockfd);
-	size_t len = strlen(packet.data) + 1; // + 1 because of '\0'
 	uint32_t id = str_to_int(packet.data);
 	free(packet.data);
 
@@ -137,10 +133,28 @@ client_t *get_client_by_user(client_t *head, char const *username)
 
 	while (current != NULL)
 	{
+		puts(username);
+		puts(current->user.username);
 		if (!strcmp(username, current->user.username))
 			return current;
 		current = current->next;
 	}
 
 	return NULL;
+}
+
+int get_device_count(device_t *head)
+{
+	if (head == NULL)
+		return 0;
+
+	device_t *current = head;
+	int count = 0;
+
+	while (current != NULL) {
+		count++;
+		current = current->next;
+	}
+
+	return count;
 }

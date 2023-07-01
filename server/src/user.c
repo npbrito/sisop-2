@@ -1,8 +1,7 @@
 #include <string.h>
-#include <pthread.h>
+#include "wrapper.h"
 #include "user.h"
 #include "packet.h"
-#include "wrapunix.h"
 #include "dir.h"
 
 pthread_mutex_t mutex;
@@ -25,12 +24,12 @@ user_t recv_user(int sockfd)
     return user;
 }
 
-void setup_user(user_t user)
+void get_sync_dir(user_t user)
 {
-    pthread_mutex_lock(&mutex);
+    Pthread_mutex_lock(&mutex);
 
     if (!check_dir_exists(user.dir))
         create_user_dir(user.username);
 
-    pthread_mutex_unlock(&mutex);
+    Pthread_mutex_unlock(&mutex);
 }

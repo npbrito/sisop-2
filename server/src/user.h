@@ -8,6 +8,6 @@ typedef struct user
 } user_t;
 
 user_t recv_user(int sockfd);
-void setup_user(user_t user);
+void get_sync_dir(user_t user);
 
 #endif

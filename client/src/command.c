@@ -1,8 +1,10 @@
 #include <string.h>
+#include <unistd.h>
 #include "command.h"
 #include "error.h"
 #include "packet.h"
 #include "wrapper.h"
+#include "util.h"
 
 cmd_t dispatch_table[] = {
     CMD(upload, 1),
@@ -63,6 +65,12 @@ void send_command(int sockfd, char* str)
     };
 
     send_packet(sockfd, packet);
+}
+
+int recv_device_auth(int sockfd)
+{
+    char buff[1];
+    return read(sockfd, buff, sizeof(char));
 }
 
 void cmd_upload(int sockfd, char const* arg)

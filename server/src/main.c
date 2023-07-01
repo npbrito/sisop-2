@@ -2,19 +2,19 @@
 #include <stdlib.h>
 #include "error.h"
 #include "util.h"
-#include "wrapinet.h"
-#include "wrappthread.h"
-#include "wrapsock.h"
-#include "wrapstdio.h"
-#include "wrapunix.h"
+#include "wrapper.h"
 #include "tcputil.h"
 #include "sockutil.h"
 #include "packet.h"
 #include "user.h"
 #include "command.h"
 #include "data.h"
+#include <unistd.h>
+#include <stdio.h>
 
 static void *handler(void *arg);
+
+client_t *clients = NULL;
 
 int main(int argc, char *argv[argc + 1])
 {
@@ -29,15 +29,10 @@ int main(int argc, char *argv[argc + 1])
 
     print_server(listenfd);
 
-    client_t *clients = NULL;
-
     while (true)
     {
         conndata_t *conndata = accept_connection(listenfd);
-        connlist_t connlist = {
-            .clients = clients,
-            .conndata = conndata};
-        handle_connection(&connlist, &handler);
+        handle_connection(conndata, &handler);
     }
 
     return EXIT_SUCCESS;
@@ -45,55 +40,63 @@ int main(int argc, char *argv[argc + 1])
 
 static void *handler(void *arg)
 {
-    connlist_t connlist = *(connlist_t *)arg;
+    conndata_t conndata = *(conndata_t *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    conndata_t conndata = *(connlist.conndata);
-    client_t *clients = connlist.clients;
-
+    
     print_client(conndata.cliaddr);
     user_t user = recv_user(conndata.connfd);
-    setup_user(user);
     uint32_t device_id = recv_id(conndata.connfd);
-    uint32_t conn_id = recv_id(conndata.connfd);
+    uint32_t clithread_id = recv_id(conndata.connfd);
+    client_t *client = get_client_by_user(clients, user.username);
+    device_t* device;
 
-    switch (conn_id)
-    {
-    case 1:
-        client_t *client = get_client_by_user(clients, user.username);
-        if (client == NULL)
-        {
-            device_t device = {
-                .id = device_id,
-                .cmdconn = conndata,
-                .next = NULL};
-            add_client(clients, user, device);
-        }
-        else
-        {
-        }
+    switch (clithread_id) {
+        case 1: // Command line thread
+            if (client == NULL)
+            {
+                device_t device = {
+                    .id = device_id,
+                    .cmdconn = conndata,
+                    .next = NULL
+                };
 
-        break;
-    case 2:
-        break;
-    case 3:
-        break;
-    default:
-        err_quit("Invalid connection ID.");
+                add_client(&clients, user, device);
+            } else {
+                int device_count = get_device_count(&(client->devices));
+                
+                if (device_count > 1) 
+                    goto cleanup;
+                else {
+                    add_device(&(client->devices), device_id, conndata);
+                }
+            }
+            get_sync_dir(user);
+            send_device_auth(conndata.connfd);
+            break;
+        case 2: // File system listen thread
+            device = get_device_by_id(&(client->devices), device_id);
+            device->fsconn = conndata;
+            break;
+        case 3: // Server listen thread
+            device = get_device_by_id(&(client->devices), device_id);
+            device->servconn = conndata;
+            // TODO Think about this!
+            break;
+        default:
+            err_quit("Invalid connection ID.");
     }
 
     while (true)
     {
         packet_t packet = recv_packet(conndata.connfd);
-
-        if (packet.type == COMMAND)
-            parse_command(packet.data, conndata.connfd);
-        else
-            parse_data(packet, conndata.connfd);
-
+        parse_command(packet.data, conndata.connfd);
         free(packet.data);
     }
 
+cleanup:
+    free(user.username);
+    free(user.dir);
     Close(conndata.connfd);
 
     return NULL;

@@ -5,8 +5,7 @@
 #include "error.h"
 #include "sockutil.h"
 #include "tcputil.h"
-#include "wrapunix.h"
-#include "wrapsock.h"
+#include "wrapper.h"
 
 int tcp_listen(char const* serv)
 {

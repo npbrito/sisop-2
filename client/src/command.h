@@ -12,6 +12,7 @@ typedef struct cmd {
 void parse_command(char* cmdline, int sockfd);
 char* read_command();
 void send_command(int sockfd, char* str);
+int recv_device_auth(int sockfd);
 
 void cmd_upload(int sockfd, char const* arg);
 void cmd_download(int sockfd, char const* arg);

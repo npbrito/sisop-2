@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include "command.h"
 #include "packet.h"
-#include "wrapunix.h"
+#include "wrapper.h"
 #include "error.h"
 
 cmd_t dispatch_table[] = {
@@ -10,7 +10,6 @@ cmd_t dispatch_table[] = {
     CMD(download, 1),
     CMD(delete, 1),
     CMD(list_server, 0),
-    CMD(get_sync_dir, 0),
     CMD(exit, 0)
 };
 
@@ -45,6 +44,11 @@ void send_command(int sockfd, char* str)
     send_packet(sockfd, packet);
 }
 
+void send_device_auth(int sockfd)
+{
+    Write(sockfd, "1", sizeof(char));
+}
+
 void cmd_upload(char const* arg, int sockfd)
 {
     printf("upload command with %s as argument\n", arg);
@@ -63,11 +67,6 @@ void cmd_delete(char const* arg, int sockfd)
 void cmd_list_server(char const* arg, int sockfd)
 {
     printf("list_server command\n");
-}
-
-void cmd_get_sync_dir(char const* arg, int sockfd)
-{
-    printf("get_sync_dir command\n");
 }
 
 void cmd_exit(char const* arg, int sockfd)
