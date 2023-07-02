@@ -5,6 +5,7 @@
 #include "dir.h"
 #include "error.h"
 #include "packet.h"
+#include "util.h"
 #include "wrapper.h"
 
 cmd_t dispatch_table[] = {
@@ -120,21 +121,30 @@ void cmd_upload(int sockfd, char const *arg)
     sprintf(cmd, "upload %s", filename);
     send_command(sockfd, cmd);
 
-    // Send file size
-    printf("BEF file_size %ld \n", file_size);
-
-    sprintf(cmd, "upload %ld", file_size);
+    // Send num of packets
+    sprintf(cmd, "%ld", file_size / MAX_DATA_SIZE);
     send_command(sockfd, cmd);
+    
 
     size_t bufflen;
-    fprintf(stdout, "Uploading: %s // Size: %ld\n", filename, file_size);
+    fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", filename, file_size, file_size / MAX_DATA_SIZE);
 
     do
     {   
-        bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);
+        bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);       
         upload_progress = (float)ftell(fileptr) / file_size;
         progress_bar(upload_progress);
-        send_command(sockfd, buffer);
+
+        // Send custom packet with characters read
+        packet_t packet = {
+        .type = COMMAND,
+        .seqn = 1,
+        .max_seqn = 1,
+        .data_length = bufflen,
+        .data = buffer};
+
+        Writen(sockfd, &packet, 4 * sizeof(uint32_t));
+        Writen(sockfd, packet.data, packet.data_length);
 
     } while (!feof(fileptr) && bufflen > 0);
 

@@ -51,24 +51,17 @@ void cmd_upload(char const *arg, int sockfd)
 
     packet_t packet = recv_packet(sockfd);
 
-    printf("file_size in char %s \n", packet.data);
-
-    // TODO: fix this
-    long file_size = strtol(packet.data, NULL, 10);
-    printf("file_size converted to long %ld \n", file_size);
-
+    long total_packets = strtol(packet.data, NULL, 10);
+    
     FILE *fileptr = fopen(arg, "wb");
-
     if (fileptr == NULL)
         err_msg("failed to open file");
-    
-    while (file_size > 0)
+
+    while (total_packets >= 0)
     {
         packet = recv_packet(sockfd);
         fwrite(packet.data, sizeof(char), packet.data_length, fileptr);
-        
-        file_size -= packet.data_length;
-        printf("file_size - packet.data_length = %ld \n", file_size);
+        total_packets--;
     } 
 
     fclose(fileptr);
