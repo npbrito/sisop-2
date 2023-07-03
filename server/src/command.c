@@ -51,17 +51,17 @@ void cmd_upload(char const *arg, int sockfd)
 
     packet_t packet = recv_packet(sockfd);
 
-    long total_packets = strtol(packet.data, NULL, 10);
+    long file_size = strtol(packet.data, NULL, 10);
     
     FILE *fileptr = fopen(arg, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");
 
-    while (total_packets >= 0)
+    while (file_size > 0)
     {
         packet = recv_packet(sockfd);
         fwrite(packet.data, sizeof(char), packet.data_length, fileptr);
-        total_packets--;
+        file_size -= packet.data_length;
     } 
 
     fclose(fileptr);
@@ -71,6 +71,63 @@ void cmd_upload(char const *arg, int sockfd)
 void cmd_download(char const *arg, int sockfd)
 {
     printf("download command with %s as argument\n", arg);
+
+    // FILE *fileptr;
+    // size_t file_size;
+    // char *filename = strrchr(arg, '/');
+    // char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
+    // char cmd[MAXLINE];
+    // float upload_progress = 0.0;
+
+
+    // // Verify if file exists
+    // if (!check_file_exists(arg))
+    //     err_msg("file does not exists");
+
+
+    // if (filename != NULL)
+    // {
+    //     filename++;
+    // }
+
+    // fileptr = fopen(arg, "rb");
+    // if (fileptr == NULL)
+    //     err_msg("failed to open file");
+
+    // fseek(fileptr, 0, SEEK_END);
+    // file_size = ftell(fileptr);
+    // rewind(fileptr);
+
+    // sprintf(cmd, "upload %s", filename);
+    // send_command(sockfd, cmd);
+
+    // sprintf(cmd, "%ld", file_size);
+    // send_command(sockfd, cmd);
+    
+
+    // size_t bufflen;
+    // fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", filename, file_size, file_size / MAX_DATA_SIZE);
+
+    // do
+    // {   
+    //     bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);       
+    //     upload_progress = (float)ftell(fileptr) / file_size;
+    //     progress_bar(upload_progress);
+
+    //     // Send custom packet with characters read
+    //     packet_t packet = {
+    //     .type = COMMAND,
+    //     .seqn = 1,
+    //     .max_seqn = 1,
+    //     .data_length = bufflen,
+    //     .data = buffer};
+
+    //     Writen(sockfd, &packet, 4 * sizeof(uint32_t));
+    //     Writen(sockfd, packet.data, packet.data_length);
+
+    // } while (!feof(fileptr) && bufflen > 0);
+
+    // free(buffer);
 }
 
 void cmd_delete(char const *arg, int sockfd)

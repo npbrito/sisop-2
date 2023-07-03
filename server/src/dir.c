@@ -12,9 +12,10 @@
 
 void create_user_dir(char *username)
 {
-  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 1) * sizeof(char)));
+  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 2) * sizeof(char)));
   strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
   strncat(dir, username, strlen(username) + 1);
+  strncat(dir, "/", 2);
 
   if (!check_dir_exists(SYNC_DIR))
   {

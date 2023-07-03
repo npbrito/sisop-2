@@ -114,6 +114,7 @@ void cmd_upload(int sockfd, char const *arg)
     if (fileptr == NULL)
         err_msg("failed to open file");
 
+    // get file size
     fseek(fileptr, 0, SEEK_END);
     file_size = ftell(fileptr);
     rewind(fileptr);
@@ -121,8 +122,8 @@ void cmd_upload(int sockfd, char const *arg)
     sprintf(cmd, "upload %s", filename);
     send_command(sockfd, cmd);
 
-    // Send num of packets
-    sprintf(cmd, "%ld", file_size / MAX_DATA_SIZE);
+    // TODO: pass to max sequence
+    sprintf(cmd, "%ld", file_size);
     send_command(sockfd, cmd);
     
 
@@ -137,7 +138,7 @@ void cmd_upload(int sockfd, char const *arg)
 
         // Send custom packet with characters read
         packet_t packet = {
-        .type = COMMAND,
+        .type = DATA,
         .seqn = 1,
         .max_seqn = 1,
         .data_length = bufflen,
