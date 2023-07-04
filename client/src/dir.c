@@ -12,10 +12,9 @@
 
 void create_user_dir(char *username)
 {
-  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 2) * sizeof(char)));
+  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 1) * sizeof(char)));
   strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
   strncat(dir, username, strlen(username) + 1);
-  strncat(dir, "/", 2);
 
   if (!check_dir_exists(SYNC_DIR))
   {
@@ -39,6 +38,19 @@ int check_dir_exists(const char *dir)
   if (stat(dir, &st) == 0)
   {
     if (S_ISDIR(st.st_mode))
+    {
+      return 1;
+    }
+  }
+  return 0;
+}
+
+int check_file_exists(const char *path)
+{
+  struct stat st;
+  if (stat(path, &st) == 0)
+  {
+    if (S_ISREG(st.st_mode))
     {
       return 1;
     }

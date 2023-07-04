@@ -6,6 +6,8 @@
 #include "error.h"
 #include "command.h"
 #include "tcputil.h"
+#include "user.h"
+
 
 static void *file_system_listener(void *arg);
 //static void *server_listener(void *arg);
