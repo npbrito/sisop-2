@@ -24,13 +24,13 @@ int main(int argc, char* argv[argc+1])
     if (!has_auth)
         err_quit("Too many devices connected for user %s", argv[1]);
 
-    int *fssockfd = Malloc(sizeof(int));
-    *fssockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*fssockfd, argv[1]);   // Send username
-    send_command(*fssockfd, argv[2]);   // Send device_id
-    send_command(*fssockfd, "2");       // Send client thread id
-    pthread_t fstid;
-    Pthread_create(&fstid, NULL, &file_system_listener, &fssockfd);
+    // int *fssockfd = Malloc(sizeof(int));
+    // *fssockfd = Tcp_connect(argv[3], argv[4]);
+    // send_command(*fssockfd, argv[1]);   // Send username
+    // send_command(*fssockfd, argv[2]);   // Send device_id
+    // send_command(*fssockfd, "2");       // Send client thread id
+    // pthread_t fstid;
+    // Pthread_create(&fstid, NULL, &file_system_listener, &fssockfd);
 
     // int *servsockfd = Malloc(sizeof(int));
     // *servsockfd = Tcp_connect(argv[3], argv[4]);
@@ -49,17 +49,17 @@ int main(int argc, char* argv[argc+1])
     return EXIT_SUCCESS;
 }
 
-static void *file_system_listener(void *arg)
-{
-    int sockfd = *(int *)arg;
-    free(arg);
-    Pthread_detach(pthread_self());
+// static void *file_system_listener(void *arg)
+// {
+//     int sockfd = *(int *)arg;
+//     free(arg);
+//     Pthread_detach(pthread_self());
 
-    // Code for inotify, etc goes here!
-    // Monitor local file system events in sync_dir here!
+//     // Code for inotify, etc goes here!
+//     // Monitor local file system events in sync_dir here!
 
-    return NULL;
-}
+//     return NULL;
+// }
 
 // static void *server_listener(void *arg)
 // {
