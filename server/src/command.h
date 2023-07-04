@@ -11,12 +11,12 @@ typedef struct cmd {
 
 void parse_command(char* cmdline, int sockfd);
 void send_command(int sockfd, char* str);
+void send_device_auth(int sockfd);
 
 void cmd_upload(char const* arg, int sockfd);
 void cmd_download(char const* arg, int sockfd);
 void cmd_delete(char const* arg, int sockfd);
 void cmd_list_server(char const* arg, int sockfd);
-void cmd_get_sync_dir(char const* arg, int sockfd);
 void cmd_exit(char const* arg, int sockfd);
 
 #endif

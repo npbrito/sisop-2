@@ -1,4 +1,5 @@
 #include <string.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <sys/stat.h>
 #include "command.h"
@@ -7,6 +8,7 @@
 #include "packet.h"
 #include "util.h"
 #include "wrapper.h"
+#include "util.h"
 
 cmd_t dispatch_table[] = {
     CMD(upload, 1),
@@ -89,8 +91,13 @@ void send_command(int sockfd, char *str)
     send_packet(sockfd, packet);
 }
 
-// TODO: send current user and device
-void cmd_upload(int sockfd, char const *arg)
+int recv_device_auth(int sockfd)
+{
+    char buff[1];
+    return read(sockfd, buff, sizeof(char));
+}
+
+void cmd_upload(int sockfd, char const* arg)
 {
     FILE *fileptr;
     size_t file_size;
