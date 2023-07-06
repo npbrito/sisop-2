@@ -179,7 +179,7 @@ void cmd_list_server(int sockfd, char const *arg)
 {
     char *cmd = "list_server";
     send_command(sockfd, cmd);
-    printf("list_server command\n");
+    //printf("list_server command\n");
 }
 
 void cmd_list_client(int sockfd, char const *arg)
