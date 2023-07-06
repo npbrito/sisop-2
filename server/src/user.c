@@ -20,6 +20,7 @@ user_t recv_user(int sockfd)
     free(packet.data);
     strncpy(user.dir, SYNC_DIR, strlen(SYNC_DIR) + 1);              // + 1 because of '\0'
     strncat(user.dir, user.username, strlen(user.username) + 1);    // + 1 because of '\0'
+    strncat(user.dir, "/", 2); // Adding / to be directory
 
     return user;
 }

@@ -4,16 +4,17 @@
 #include "packet.h"
 #include "wrapper.h"
 #include "error.h"
+#include "sockutil.h"
 
 cmd_t dispatch_table[] = {
-    CMD(upload, 1),
-    CMD(download, 1),
-    CMD(delete, 1),
-    CMD(list_server, 0),
-    CMD(exit, 0)
+    CMD(upload, "sync_dir" ,1),
+    CMD(download, "sync_dir" , 1),
+    CMD(delete, "sync_dir" , 1),
+    CMD(list_server, "sync_dir" ,0),
+    CMD(exit, "sync_dir" ,0)
 };
 
-void parse_command(char *cmdline, int sockfd)
+void parse_command(char *cmdline, char* userdir, int sockfd)
 {
     char const *delim = " \n";
     char *saveptr;
@@ -27,7 +28,7 @@ void parse_command(char *cmdline, int sockfd)
         if (!strcmp(cmd, current_cmd.name))
         {
             char const *arg = strtok_r(NULL, delim, &saveptr);
-            current_cmd.func(arg, sockfd);
+            current_cmd.func(arg, userdir, sockfd);
             return;
         }
     }
@@ -50,15 +51,19 @@ void send_device_auth(int sockfd)
     Write(sockfd, "1", sizeof(char));
 }
 
-void cmd_upload(char const* arg, int sockfd)
+void cmd_upload(char const* arg, char const* userdir, int sockfd)
 {
     printf("upload command with %s as argument\n", arg);
+
+    char path[265]; // 256 + sync_dir_
+    strcpy(path, userdir);
+    strncat(path, arg, sizeof(path) - strlen(path) - 1);
 
     packet_t packet = recv_packet(sockfd);
 
     long file_size = strtol(packet.data, NULL, 10);
     
-    FILE *fileptr = fopen(arg, "wb");
+    FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");
 
@@ -73,7 +78,7 @@ void cmd_upload(char const* arg, int sockfd)
     fprintf(stdout, "File upload complete: %s\n", arg);
 }
 
-void cmd_download(char const *arg, int sockfd)
+void cmd_download(char const *arg, char const* userdir, int sockfd)
 {
     printf("download command with %s as argument\n", arg);
 
@@ -135,17 +140,17 @@ void cmd_download(char const *arg, int sockfd)
     // free(buffer);
 }
 
-void cmd_delete(char const *arg, int sockfd)
+void cmd_delete(char const *arg, char const* userdir, int sockfd)
 {
     printf("delete command with %s as argument\n", arg);
 }
 
-void cmd_list_server(char const *arg, int sockfd)
+void cmd_list_server(char const *arg, char const* userdir, int sockfd)
 {
     printf("list_server command\n");
 }
 
-void cmd_exit(char const *arg, int sockfd)
+void cmd_exit(char const *arg, char const* userdir, int sockfd)
 {
     printf("exit command\n");
 }

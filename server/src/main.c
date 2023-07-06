@@ -90,7 +90,7 @@ static void *handler(void *arg)
     while (true)
     {
         packet_t packet = recv_packet(conndata.connfd);
-        parse_command(packet.data, conndata.connfd);
+        parse_command(packet.data, user.dir, conndata.connfd);
         free(packet.data);
     }
 
