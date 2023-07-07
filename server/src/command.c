@@ -10,8 +10,7 @@ cmd_t dispatch_table[] = {
     CMD(download, 1),
     CMD(delete, 1),
     CMD(list_server, 0),
-    CMD(exit, 0)
-};
+    CMD(exit, 0)};
 
 void parse_command(char *cmdline, int sockfd)
 {
@@ -50,14 +49,14 @@ void send_device_auth(int sockfd)
     Write(sockfd, "1", sizeof(char));
 }
 
-void cmd_upload(char const* arg, int sockfd)
+void cmd_upload(char const *arg, int sockfd)
 {
     printf("upload command with %s as argument\n", arg);
 
     packet_t packet = recv_packet(sockfd);
 
     long file_size = strtol(packet.data, NULL, 10);
-    
+
     FILE *fileptr = fopen(arg, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");
@@ -67,7 +66,7 @@ void cmd_upload(char const* arg, int sockfd)
         packet = recv_packet(sockfd);
         fwrite(packet.data, sizeof(char), packet.data_length, fileptr);
         file_size -= packet.data_length;
-    } 
+    }
 
     fclose(fileptr);
     fprintf(stdout, "File upload complete: %s\n", arg);
@@ -84,11 +83,9 @@ void cmd_download(char const *arg, int sockfd)
     // char cmd[MAXLINE];
     // float upload_progress = 0.0;
 
-
     // // Verify if file exists
     // if (!check_file_exists(arg))
     //     err_msg("file does not exists");
-
 
     // if (filename != NULL)
     // {
@@ -108,14 +105,13 @@ void cmd_download(char const *arg, int sockfd)
 
     // sprintf(cmd, "%ld", file_size);
     // send_command(sockfd, cmd);
-    
 
     // size_t bufflen;
     // fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", filename, file_size, file_size / MAX_DATA_SIZE);
 
     // do
-    // {   
-    //     bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);       
+    // {
+    //     bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);
     //     upload_progress = (float)ftell(fileptr) / file_size;
     //     progress_bar(upload_progress);
 
