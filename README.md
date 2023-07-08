@@ -8,3 +8,4 @@ usuário.
 
 - [X] Alocar Porta dinamicamente
 - [X] Mostar IP da máquina do servidor no terminal
+- [X] Progresso de upload
