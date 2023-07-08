@@ -133,6 +133,8 @@ void cmd_download(char const *arg, int sockfd)
 
 void cmd_delete(char const *arg, int sockfd)
 {
+    // TODO Delete the file itself
+    remove(arg);
     printf("delete command with %s as argument\n", arg);
 }
 

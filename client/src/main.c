@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <sys/inotify.h>
+#include <string.h>
 #include <limits.h>
 #include "wrapper.h"
 #include "error.h"
@@ -60,27 +61,48 @@ static void *file_system_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    char dir[] = "../../client/sync_dir";
-    int notifyfd = inotify_init();
-    inotify_add_watch(notifyfd, dir, IN_CREATE);
-    char eventbuf[BUFSIZE];
+    char dir[] = "./sync_dir/";
+    int nfd = inotify_init();
+    inotify_add_watch(nfd, dir, IN_CREATE | IN_DELETE | IN_MODIFY);
+    char buf[BUFSIZE];
 
-    // Code for inotify, etc goes here!
-    // Monitor local file system events in sync_dir here!
+    while (true) {
+        ssize_t len = read(nfd, buf, sizeof buf);
+        struct inotify_event *event;
 
-    while (true)
-    {
-        int n = read(notifyfd, eventbuf, BUFSIZE);
+        for (char *ptr = buf; ptr < buf + len;
+                ptr += sizeof(struct inotify_event) + event->len) {
 
-        for (char *p = eventbuf; p < eventbuf + n;)
-        {
-            struct inotify_event *event = (struct inotify_event *)p;
-            p += sizeof(struct inotify_event) + event->len;
+            event = (struct inotify_event *) ptr;
+            char cmd_arg[MAXLINE];
 
-            char cmd[] = "upload ../../client/sync_dir/";
-            strcat(cmd, event->name);
-            printf("%s", cmd);
-            parse_command(cmd, sockfd);
+            if (event->mask & IN_CREATE) {
+                strcat(cmd_arg, dir);
+                strcat(cmd_arg, event->name);
+                cmd_upload(sockfd, cmd_arg);
+            }
+
+            if (event->mask & IN_DELETE) {
+                strcat(cmd_arg, event->name);
+                cmd_delete(sockfd, cmd_arg);
+            }
+
+            if (event->mask & IN_MODIFY) {
+                strcat(cmd_arg, event->name);
+                cmd_delete(sockfd, cmd_arg);
+                cmd_arg[0] = '\0';
+                strcat(cmd_arg, dir);
+                strcat(cmd_arg, event->name);
+                cmd_upload(sockfd, cmd_arg);
+            }
+            
+            cmd_arg[0] = '\0';
+
+            // char cmd[] = "list_server";
+            // char cmd[] = "upload ../../client/sync_dir/";
+            //strcat(cmd, event->name);
+            //printf("%s", cmd);
+            //parse_command(cmd, sockfd);
         }
     }
 

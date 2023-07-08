@@ -99,49 +99,42 @@ int recv_device_auth(int sockfd)
 
 void cmd_upload(int sockfd, char const* arg)
 {
-    FILE *fileptr;
-    size_t file_size;
     char *filename = strrchr(arg, '/');
-    char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
-    char cmd[MAXLINE];
-    float upload_progress = 0.0;
+    filename++; // Next character after '/'
 
-
-    // Verify if file exists
-    if (!check_file_exists(arg))
-        err_msg("file does not exists");
-
-
-    if (filename != NULL)
-    {
-        filename++;
+    if (!check_file_exists(arg)) {
+        err_msg("File %s does not exist", arg);
+        return;
     }
 
-    fileptr = fopen(arg, "rb");
-    if (fileptr == NULL)
-        err_msg("failed to open file");
+    FILE *fileptr = fopen(arg, "rb");
 
-    // get file size
+    if (fileptr == NULL) {
+        err_msg("failed to open file");
+        return;
+    }
+
     fseek(fileptr, 0, SEEK_END);
-    file_size = ftell(fileptr);
+    size_t file_size = ftell(fileptr);
     rewind(fileptr);
 
+    char cmd[MAXLINE];
     sprintf(cmd, "upload %s", filename);
     send_command(sockfd, cmd);
 
     // TODO: pass to max sequence
     sprintf(cmd, "%ld", file_size);
     send_command(sockfd, cmd);
-    
 
     size_t bufflen;
     fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", filename, file_size, file_size / MAX_DATA_SIZE);
-
+    //float upload_progress = 0.0;
+    char *buffer = Malloc(MAX_DATA_SIZE);
     do
     {   
         bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);       
-        upload_progress = (float)ftell(fileptr) / file_size;
-        progress_bar(upload_progress);
+        //upload_progress = (float)ftell(fileptr) / file_size;
+        //progress_bar(upload_progress);
 
         // Send custom packet with characters read
         packet_t packet = {
