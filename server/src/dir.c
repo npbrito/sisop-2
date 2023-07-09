@@ -45,3 +45,16 @@ int check_dir_exists(const char *dir)
   }
   return 0;
 }
+
+int check_file_exists(const char *path)
+{
+  struct stat st;
+  if (stat(path, &st) == 0)
+  {
+    if (S_ISREG(st.st_mode))
+    {
+      return 1;
+    }
+  }
+  return 0;
+}

@@ -7,7 +7,8 @@ static const char SYNC_DIR[] = "sync_dir_";
 
 typedef struct stat stat_t;
 
-void create_user_dir(char* username);
-int check_dir_exists(char const* dir);
+void create_user_dir(char *username);
+int check_dir_exists(char const *dir);
+int check_file_exists(const char *path);
 
 #endif

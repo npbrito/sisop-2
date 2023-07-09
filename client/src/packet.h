@@ -14,6 +14,8 @@ typedef struct packet
     char *data;
 } packet_t;
 
+packet_t recv_packet(int sockfd);
 void send_packet(int sockfd, packet_t packet);
+packet_t recv_packet(int sockfd);
 
 #endif
