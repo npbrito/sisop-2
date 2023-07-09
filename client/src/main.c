@@ -26,6 +26,9 @@ int main(int argc, char* argv[argc+1])
     if (!has_auth)
         err_quit("Too many devices connected for user %s", argv[1]);
 
+    user_t user = save_user(argv[1]);
+    get_sync_dir(user);
+
     // int *fssockfd = Malloc(sizeof(int));
     // *fssockfd = Tcp_connect(argv[3], argv[4]);
     // send_command(*fssockfd, argv[1]);   // Send username
@@ -44,7 +47,7 @@ int main(int argc, char* argv[argc+1])
 
     while (true) {
         char* cmd = read_command();
-        parse_command(cmd, cmdsockfd);
+        parse_command(cmd, user.dir, cmdsockfd);
         free(cmd);
     }
 
