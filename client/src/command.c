@@ -206,20 +206,16 @@ void cmd_list_server(int sockfd, char const *userdir, char const *arg)
     send_command(sockfd, cmd);
     printf("list_server command\n");
 
-    packet_t packet = {
-        .type = DATA,
-        .seqn = 0,
-        .max_seqn = 1,
-        .data_length = 0,
-        .data = ""};
+    // Headers
+    packet_t packet = recv_packet(sockfd);
+    fprintf(stdout, "%s\n", packet.data);
 
     // wait for response
     while (packet.seqn <= packet.max_seqn)
     {
         packet = recv_packet(sockfd);
         fprintf(stdout, "%s", packet.data);
-        fprintf(stdout, "%d", packet.data_length);
-    }
+    } 
 }
 
 void cmd_list_client(int sockfd, char const *userdir, char const *arg)

@@ -197,11 +197,13 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
     struct stat statbuf;
     struct tm *time;
     char mtime[256], atime[256], ctime[256];
+
     long int size;
     int total_files = 0;
 
     strncpy(path, "./", 3);
     strncat(path, userdir, strlen(userdir) + 1);
+
     dir = opendir(path);
 
     // get total files on dir
@@ -213,13 +215,13 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
 
         total_files++;
     }
-
     // Restart dir reading
     rewinddir(dir);
 
-    char *data = (char *)Malloc((114) * sizeof(char));
+    int data_size = snprintf(NULL, 0, "%s\t%s\t%s\t%s\t%s\n", "modification time (mtime)", "access time (atime)", "creation time (ctime)", "size", "name");
+    char *data = (char*)malloc((data_size + 1) * sizeof(char));
     // Headers modification time (mtime), access time (atime) e change or creation time (ctime)
-    sprintf(data, "%s\t%s\t\t%s\t%s\t%s\n", "modification time (mtime)", "access time (atime)", "creation time (ctime)", "size", "name");
+    snprintf(data, data_size + 1, "%s\t%s\t%s\t%s\t%s\n", "modification time (mtime)", "access time (atime)", "creation time (ctime)", "size", "name");
 
     packet_t packet = {
         .type = DATA,
@@ -232,7 +234,9 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
     Writen(sockfd, packet.data, packet.data_length);
     free(data);
 
-    for (int i = 0; i < total_files; i++)
+    int files_read = 0;
+
+    while ((dp = readdir(dir)) != NULL)
     {
         // Ignore special dir
         if (strncmp(dp->d_name, ".", 1) == 0 || strncmp(dp->d_name, "..", 2) == 0)
@@ -257,16 +261,15 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
 
         size = (intmax_t)statbuf.st_size;
 
-        // 33 of \t and \0
-        char *data = (char *)Malloc((strlen(mtime) + strlen(atime) + strlen(ctime) + strlen((char *)size) + strlen(dp->d_name) + 33) * sizeof(char));
-
-        sprintf("%s\t%s\t%s\t%jd\t%s\n", mtime, atime, ctime, size, dp->d_name);
+        data_size = snprintf(NULL, 0, "%s\t%s\t%s\t%ld\t%s\n", mtime, atime, ctime, size, dp->d_name);
+        char *data = (char*)malloc((data_size + 1) * sizeof(char));
+        snprintf(data, data_size + 1, "%s\t%s\t%s\t%ld\t%s\n", mtime, atime, ctime, size, dp->d_name);
 
         packet_t packet = {
             .type = DATA,
-            .seqn = i,
+            .seqn = files_read,
             .max_seqn = total_files,
-            .data_length = strlen(data),
+            .data_length = strlen(data) + 1,
             .data = data};
 
         Writen(sockfd, &packet, 4 * sizeof(uint32_t));
@@ -274,6 +277,7 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
 
         free(data);
         free(full_path);
+        files_read++;
     }
 }
 
