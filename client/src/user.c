@@ -19,16 +19,17 @@ user_t save_user(char * username)
     strncpy(user.username, username, len);
     strncpy(user.dir, SYNC_DIR, strlen(SYNC_DIR) + 1);              // + 1 because of '\0'
     strncat(user.dir, user.username, strlen(user.username) + 1);    // + 1 because of '\0'
+    strncat(user.dir, "/", 2); // Adding / to be directory
 
     return user;
 }
 
-void setup_user(user_t user)
+void get_sync_dir(user_t user)
 {
-    pthread_mutex_lock(&mutex);
+    Pthread_mutex_lock(&mutex);
 
     if (!check_dir_exists(user.dir))
         create_user_dir(user.username);
 
-    pthread_mutex_unlock(&mutex);
+    Pthread_mutex_unlock(&mutex);
 }
