@@ -24,6 +24,7 @@ user_t save_user(char * username)
     return user;
 }
 
+// TODO: get server info
 void get_sync_dir(user_t user)
 {
     Pthread_mutex_lock(&mutex);

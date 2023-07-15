@@ -181,6 +181,7 @@ void cmd_upload(char const *arg, user_t const *user, int sockfd)
 
     fclose(fileptr);
     fprintf(stdout, "File upload complete: %s\n", arg);
+    propagate_upload(arg, user, sockfd);
 }
 
 void progress_bar(float progress)
@@ -351,10 +352,10 @@ void cmd_list_server(char const *arg, user_t const *user, int sockfd)
         time = localtime(&statbuf.st_mtime);
         strftime(mtime, sizeof(mtime), nl_langinfo(D_T_FMT), time);
         /* Time of last access.  */
-        time = localtime(&statbuf.st_mtime);
+        time = localtime(&statbuf.st_atime);
         strftime(atime, sizeof(atime), nl_langinfo(D_T_FMT), time);
         /* Time of last status change.  */
-        time = localtime(&statbuf.st_mtime);
+        time = localtime(&statbuf.st_ctime);
         strftime(ctime, sizeof(ctime), nl_langinfo(D_T_FMT), time);
 
         size = (intmax_t)statbuf.st_size;
@@ -382,4 +383,5 @@ void cmd_list_server(char const *arg, user_t const *user, int sockfd)
 void cmd_exit(char const *arg, user_t const *user, int sockfd)
 {
     printf("exit command\n");
+    return NULL;
 }

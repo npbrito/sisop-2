@@ -132,7 +132,8 @@ void cmd_upload(int sockfd, char const *userdir, char const *arg)
     file_size = ftell(fileptr);
     rewind(fileptr);
 
-    sprintf(cmd, "upload %s", filename);
+    // TODO: VER cmd_list_client
+    sprintf(cmd, "upload %s ctime", filename);
     send_command(sockfd, cmd);
 
     // Total packets to send
@@ -279,6 +280,8 @@ void receive_download()
 
 void cmd_exit(int sockfd, char const *userdir, char const *arg)
 {
+    char *cmd = "exit";
+    send_command(sockfd, cmd);
     Close(sockfd);
     exit(EXIT_SUCCESS);
 }
