@@ -38,9 +38,9 @@ int main(int argc, char *argv[argc + 1])
 
 static void *handler(void *arg)
 {
-    printf("handler\n")
+    printf("handler\n");
     conndata_t conndata = *(conndata_t *)arg;
-    printf("conndata\n")
+    printf("conndata\n");
     free(arg);
     Pthread_detach(pthread_self());
     print_client(conndata.cliaddr);
@@ -86,7 +86,7 @@ static void *handler(void *arg)
             err_quit("Invalid connection ID.");
     }
 
-    printf("before while\n")
+    printf("before while\n");
 
     while (true)
     {
