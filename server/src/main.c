@@ -14,8 +14,6 @@
 
 static void *handler(void *arg);
 
-client_t *clients = NULL;
-
 int main(int argc, char *argv[argc + 1])
 {
     int listenfd;
@@ -40,10 +38,11 @@ int main(int argc, char *argv[argc + 1])
 
 static void *handler(void *arg)
 {
+    printf("handler\n")
     conndata_t conndata = *(conndata_t *)arg;
+    printf("conndata\n")
     free(arg);
     Pthread_detach(pthread_self());
-    
     print_client(conndata.cliaddr);
     user_t user = recv_user(conndata.connfd);
     uint32_t device_id = recv_id(conndata.connfd);
@@ -81,16 +80,18 @@ static void *handler(void *arg)
         case 3: // Server listen thread
             device = get_device_by_id(&(client->devices), device_id);
             device->servconn = conndata;
-            // TODO Think about this!
+            // TODO: Think about this!
             break;
         default:
             err_quit("Invalid connection ID.");
     }
 
+    printf("before while\n")
+
     while (true)
     {
         packet_t packet = recv_packet(conndata.connfd);
-        parse_command(packet.data, user.dir, conndata.connfd);
+        parse_command(packet.data, &user, conndata.connfd);
         free(packet.data);
     }
 

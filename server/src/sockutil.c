@@ -5,6 +5,8 @@
 #include "sockutil.h"
 #include "wrapper.h"
 
+client_t *clients = NULL;
+
 void print_server(int listenfd)
 {
 	struct sockaddr_in servaddr;
@@ -25,16 +27,16 @@ void print_server(int listenfd)
 
 	char buff[MAXLINE];
 	printf("Server listening on IP: %s PORT: %hu\n",
-		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
-		   port);
+				 Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+				 port);
 }
 
 void print_client(struct sockaddr_in cliaddr)
 {
 	char buff[MAXLINE];
 	printf("Client connecting from IP: %s PORT: %hu\n",
-		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
-		   ntohs(cliaddr.sin_port));
+				 Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+				 ntohs(cliaddr.sin_port));
 }
 
 conndata_t *accept_connection(int listenfd)
@@ -57,8 +59,11 @@ void handle_connection(conndata_t *conndata, void *(*handler)(void *))
 
 void add_client(client_t **head, user_t user, device_t device)
 {
+	static pthread_mutex_t add_client_mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_mutex_lock(&add_client_mutex);
+
 	if (*head == NULL)
-	{	
+	{
 		*head = Malloc(sizeof(client_t));
 		(*head)->user = user;
 		(*head)->devices = device;
@@ -76,12 +81,16 @@ void add_client(client_t **head, user_t user, device_t device)
 		current->next->devices = device;
 		current->next->next = NULL;
 	}
+	pthread_mutex_unlock(&add_client_mutex);
 }
 
 void add_device(device_t *head, int id, conndata_t cmdconn)
 {
+	static pthread_mutex_t add_device_mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_mutex_lock(&add_device_mutex);
 	device_t *current = head;
 
+	current->next = Malloc(sizeof(client_t));
 	while (current->next != NULL)
 		current = current->next;
 
@@ -89,6 +98,7 @@ void add_device(device_t *head, int id, conndata_t cmdconn)
 	current->next->id = id;
 	current->next->cmdconn = cmdconn;
 	current->next->next = NULL;
+	pthread_mutex_unlock(&add_device_mutex);
 }
 
 device_t *get_device_by_id(device_t *head, int id)
@@ -133,8 +143,8 @@ client_t *get_client_by_user(client_t *head, char const *username)
 
 	while (current != NULL)
 	{
-		puts(username);
-		puts(current->user.username);
+		// puts(username);
+		// puts(current->user.username);
 		if (!strcmp(username, current->user.username))
 			return current;
 		current = current->next;
@@ -151,7 +161,8 @@ int get_device_count(device_t *head)
 	device_t *current = head;
 	int count = 0;
 
-	while (current != NULL) {
+	while (current != NULL)
+	{
 		count++;
 		current = current->next;
 	}

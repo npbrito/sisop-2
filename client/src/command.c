@@ -23,7 +23,6 @@ cmd_t dispatch_table[] = {
     CMD(list_client, "sync_dir", 0),
     CMD(exit, "sync_dir", 0)};
 
-// TODO: fix for 1 packet
 void progress_bar(float progress)
 {
     int bar_width = 50;
@@ -266,6 +265,16 @@ void cmd_list_client(int sockfd, char const *userdir, char const *arg)
         printf("%s\t%s\t%s\t%jd\t%s\n", mtime, atime, ctime, size, dp->d_name);
         free(full_path);
     }
+}
+
+void receive_upload()
+{
+
+}
+
+void receive_download()
+{
+    
 }
 
 void cmd_exit(int sockfd, char const *userdir, char const *arg)

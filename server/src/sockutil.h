@@ -29,6 +29,8 @@ typedef struct client
     struct client *next;
 } client_t;
 
+extern client_t *clients;
+
 void add_device(device_t *head, int id, conndata_t cmdconn);
 device_t *get_device_by_id(device_t *head, int id);
 uint32_t recv_id(int sockfd);

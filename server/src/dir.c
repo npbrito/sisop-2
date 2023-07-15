@@ -10,29 +10,6 @@
 #include "error.h"
 #include "dir.h"
 
-void create_user_dir(char *username)
-{
-  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 2) * sizeof(char)));
-  strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
-  strncat(dir, username, strlen(username) + 1);
-  strncat(dir, "/", 2);
-
-  if (!check_dir_exists(SYNC_DIR))
-  {
-    // TODO: Move mutex here
-    mkdir(SYNC_DIR, 0700);
-  }
-
-  int n = mkdir(dir, 0700);
-
-  free(dir);
-
-  if (n != 0)
-  {
-    err_sys("createUserDir error");
-  }
-}
-
 int check_dir_exists(const char *dir)
 {
   struct stat st;
@@ -57,4 +34,27 @@ int check_file_exists(const char *path)
     }
   }
   return 0;
+}
+
+void create_user_dir(char *username)
+{
+  char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 2) * sizeof(char)));
+  strncpy(dir, SYNC_DIR, strlen(SYNC_DIR) + 1);
+  strncat(dir, username, strlen(username) + 1);
+  strncat(dir, "/", 2);
+
+  if (!check_dir_exists(SYNC_DIR))
+  {
+    // TODO: Move mutex here
+    mkdir(SYNC_DIR, 0700);
+  }
+
+  int n = mkdir(dir, 0700);
+
+  free(dir);
+
+  if (n != 0)
+  {
+    err_sys("createUserDir error");
+  }
 }

@@ -16,13 +16,13 @@
 #include "math.h"
 
 cmd_t dispatch_table[] = {
-    CMD(upload, "sync_dir", 1),
-    CMD(download, "sync_dir", 1),
-    CMD(delete, "sync_dir", 1),
-    CMD(list_server, "sync_dir", 0),
-    CMD(exit, "sync_dir", 0)};
+    CMD(upload, NULL, 1),
+    CMD(download, NULL, 1),
+    CMD(delete, NULL, 1),
+    CMD(list_server, NULL, 0),
+    CMD(exit, NULL, 0)};
 
-void parse_command(char *cmdline, char *userdir, int sockfd)
+void parse_command(char *cmdline, user_t *user, int sockfd)
 {
     char const *delim = " \n";
     char *saveptr;
@@ -36,7 +36,7 @@ void parse_command(char *cmdline, char *userdir, int sockfd)
         if (!strcmp(cmd, current_cmd.name))
         {
             char const *arg = strtok_r(NULL, delim, &saveptr);
-            current_cmd.func(arg, userdir, sockfd);
+            current_cmd.func(arg, user, sockfd);
             return;
         }
     }
@@ -59,12 +59,107 @@ void send_device_auth(int sockfd)
     Write(sockfd, "1", sizeof(char));
 }
 
-void cmd_upload(char const *arg, char const *userdir, int sockfd)
+void propagate_upload(char const *arg, user_t const *user, int sockfd)
+{
+    client_t *client = get_client_by_user(clients, user->username);
+    int device_count = get_device_count(&(client->devices));
+
+    device_t *current_device = &(client->devices);
+
+    for (int i = 0; i < device_count; i++)
+    {
+        printf("current_device->cmdconn.connfd %d != sockfd %d", current_device->cmdconn.connfd, sockfd);
+        if (current_device->cmdconn.connfd != sockfd)
+        {
+            FILE *fileptr;
+            size_t file_size;
+            char path[256];
+            strcpy(path, user->dir);
+            strncat(path, arg, strlen(arg) + 1);
+            char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
+            char cmd[MAXLINE];
+
+            if (!check_file_exists(path))
+                err_msg("file does not exist");
+
+            fileptr = fopen(path, "rb");
+            if (fileptr == NULL)
+                err_msg("failed to open file");
+
+            // get file size
+            fseek(fileptr, 0, SEEK_END);
+            file_size = ftell(fileptr);
+            rewind(fileptr);
+
+            sprintf(cmd, "download %s", arg);
+
+            // TODO: pass to max sequence
+            sprintf(cmd, "%ld", file_size);
+
+            size_t bufflen;
+            fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", arg, file_size, file_size / MAX_DATA_SIZE);
+
+            packet_t initial_packet = {
+                .type = COMMAND,
+                .seqn = 1,
+                .max_seqn = 1,
+                .data_length = sizeof(cmd),
+                .data = cmd};
+            Writen(current_device->cmdconn.connfd, &initial_packet, 4 * sizeof(uint32_t));
+            Writen(current_device->cmdconn.connfd, initial_packet.data, initial_packet.data_length);
+
+            do
+            {
+                bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE - strlen("upload "), fileptr);
+
+                // Send custom packet with characters read
+                packet_t packet = {
+                    .type = DATA,
+                    .seqn = 1,
+                    .max_seqn = 1,
+                    .data_length = bufflen,
+                    .data = buffer};
+
+                Writen(current_device->cmdconn.connfd, &packet, 4 * sizeof(uint32_t));
+                Writen(current_device->cmdconn.connfd, packet.data, packet.data_length);
+            } while (!feof(fileptr) && bufflen > 0);
+
+            fclose(fileptr);
+            free(buffer);
+        }
+
+        current_device = current_device->next;
+    }
+}
+
+void propagate_delete(char const *arg, user_t const *user, int sockfd)
+{
+    client_t *client = get_client_by_user(clients, user->username);
+    int device_count = get_device_count(&(client->devices));
+
+    device_t *current_device = &(client->devices);
+
+    for (int i = 0; i < device_count; i++)
+    {
+        printf("current_device->cmdconn.connfd %d != sockfd %d", current_device->cmdconn.connfd, sockfd);
+        if (current_device->cmdconn.connfd != sockfd)
+        {
+            char buff[MAXLINE];
+            sprintf(buff, "delete %s", arg);
+            send_command(sockfd, buff);
+            printf("delete command to client device %d with %s as argument\n", current_device->cmdconn.connfd, arg);
+        }
+
+        current_device = current_device->next;
+    }
+}
+
+void cmd_upload(char const *arg, user_t const *user, int sockfd)
 {
     printf("upload command with %s as argument\n", arg);
 
     char path[265]; // 256 + sync_dir_
-    strcpy(path, userdir);
+    strcpy(path, user->dir);
     strncat(path, arg, sizeof(path) - strlen(path) - 1);
 
     FILE *fileptr = fopen(path, "wb");
@@ -108,7 +203,7 @@ void progress_bar(float progress)
         fprintf(stdout, "\n");
 }
 
-void cmd_download(char const *arg, char const *dir, int sockfd)
+void cmd_download(char const *arg, user_t const *user, int sockfd)
 {
     printf("download command with %s as argument\n", arg);
 
@@ -117,7 +212,7 @@ void cmd_download(char const *arg, char const *dir, int sockfd)
     char path[256];
     // char *filename = strrchr(arg, '/');
     // printf("Filename: %s\n", filename);
-    strcpy(path, dir);
+    strcpy(path, user->dir);
     strncat(path, arg, strlen(arg) + 1);
     char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
     char cmd[MAXLINE];
@@ -180,16 +275,19 @@ void cmd_download(char const *arg, char const *dir, int sockfd)
     free(buffer);
 }
 
-void cmd_delete(char const *arg, char const *userdir, int sockfd)
+void cmd_delete(char const *arg, user_t const *user, int sockfd)
 {
-    // TODO Delete the file itself
-    remove(arg);
+    char path[256];
+    strcpy(path, user->dir);
+    strncat(path, arg, strlen(arg) + 1);
+    remove(path);
     printf("delete command with %s as argument\n", arg);
+    propagate_delete(arg, user, sockfd);
 }
 
-void cmd_list_server(char const *arg, char const *userdir, int sockfd)
+void cmd_list_server(char const *arg, user_t const *user, int sockfd)
 {
-    printf("list_server command on %s\n", userdir);
+    printf("list_server command on %s\n", user->dir);
 
     char path[256];
     DIR *dir;
@@ -202,7 +300,7 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
     int total_files = 0;
 
     strncpy(path, "./", 3);
-    strncat(path, userdir, strlen(userdir) + 1);
+    strncat(path, user->dir, strlen(user->dir) + 1);
 
     dir = opendir(path);
 
@@ -219,7 +317,7 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
     rewinddir(dir);
 
     int data_size = snprintf(NULL, 0, "%s\t%s\t%s\t%s\t%s\n", "modification time (mtime)", "access time (atime)", "creation time (ctime)", "size", "name");
-    char *data = (char*)malloc((data_size + 1) * sizeof(char));
+    char *data = (char *)malloc((data_size + 1) * sizeof(char));
     // Headers modification time (mtime), access time (atime) e change or creation time (ctime)
     snprintf(data, data_size + 1, "%s\t%s\t%s\t%s\t%s\n", "modification time (mtime)", "access time (atime)", "creation time (ctime)", "size", "name");
 
@@ -262,7 +360,7 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
         size = (intmax_t)statbuf.st_size;
 
         data_size = snprintf(NULL, 0, "%s\t%s\t%s\t%ld\t%s\n", mtime, atime, ctime, size, dp->d_name);
-        char *data = (char*)malloc((data_size + 1) * sizeof(char));
+        char *data = (char *)malloc((data_size + 1) * sizeof(char));
         snprintf(data, data_size + 1, "%s\t%s\t%s\t%ld\t%s\n", mtime, atime, ctime, size, dp->d_name);
 
         packet_t packet = {
@@ -281,7 +379,7 @@ void cmd_list_server(char const *arg, char const *userdir, int sockfd)
     }
 }
 
-void cmd_exit(char const *arg, char const *userdir, int sockfd)
+void cmd_exit(char const *arg, user_t const *user, int sockfd)
 {
     printf("exit command\n");
 }
