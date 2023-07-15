@@ -110,6 +110,7 @@ void cmd_upload(int sockfd, char const *userdir, char const *arg)
     char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
     char cmd[MAXLINE];
     float upload_progress = 0.0;
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
     // Current packet and max packets
     int seq = 1;
     int max_seq;
@@ -122,7 +123,7 @@ void cmd_upload(int sockfd, char const *userdir, char const *arg)
     {
         filename++;
     }
-
+    pthread_mutex_lock(&m);
     fileptr = fopen(arg, "rb");
     if (fileptr == NULL)
         err_msg("failed to open file");
@@ -161,6 +162,8 @@ void cmd_upload(int sockfd, char const *userdir, char const *arg)
         seq++;
     } while (!feof(fileptr) && bufflen > 0);
 
+    fclose(fileptr);
+    pthread_mutex_lock(&m);
     free(buffer);
 }
 
@@ -168,6 +171,7 @@ void cmd_download(int sockfd, char const *userdir, char const *arg)
 {
     char buff[MAXLINE];
     char path[256];
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
     sprintf(buff, "download %s", arg);
     send_command(sockfd, buff);
     printf("download command with %s as argument\n", arg);
@@ -177,6 +181,7 @@ void cmd_download(int sockfd, char const *userdir, char const *arg)
     long file_size = strtol(packet.data, NULL, 10);
     strcpy(path, userdir);
     strncat(path, arg, strlen(arg) + 1);
+    pthread_mutex_lock(&m);
     FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");
@@ -189,6 +194,7 @@ void cmd_download(int sockfd, char const *userdir, char const *arg)
     }
 
     fclose(fileptr);
+    pthread_mutex_unlock(&m);
     fprintf(stdout, "File download complete: %s\n", arg);
 }
 
@@ -215,7 +221,7 @@ void cmd_list_server(int sockfd, char const *userdir, char const *arg)
     {
         packet = recv_packet(sockfd);
         fprintf(stdout, "%s", packet.data);
-    } 
+    }
 }
 
 void cmd_list_client(int sockfd, char const *userdir, char const *arg)
@@ -270,12 +276,10 @@ void cmd_list_client(int sockfd, char const *userdir, char const *arg)
 
 void receive_upload()
 {
-
 }
 
 void receive_download()
 {
-    
 }
 
 void cmd_exit(int sockfd, char const *userdir, char const *arg)
