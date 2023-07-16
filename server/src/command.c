@@ -165,9 +165,11 @@ void propagate_delete(char const *arg, user_t const *user, int sockfd)
 void cmd_upload(char const *arg, user_t const *user, int sockfd)
 {
     char path[265]; // 256 + sync_dir_
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
     strcpy(path, user->dir);
     strncat(path, arg, sizeof(path) - strlen(path) - 1);
 
+    pthread_mutex_lock(&m);
     FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");
@@ -186,6 +188,7 @@ void cmd_upload(char const *arg, user_t const *user, int sockfd)
     }
 
     fclose(fileptr);
+    pthread_mutex_unlock(&m);
     fprintf(stdout, "File upload complete: %s\n", arg);
     propagate_upload(arg, user, sockfd);
 }
@@ -201,12 +204,14 @@ void cmd_download(char const *arg, user_t const *user, int sockfd)
     char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
     char cmd[MAXLINE];
     float download_progress = 0.0;
+    pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 
 
     // Verify if file exists
     if (!check_file_exists(path))
         err_msg("file does not exist");
 
+    pthread_mutex_lock(&m);
     fileptr = fopen(path, "rb");
     if (fileptr == NULL)
         err_msg("failed to open file");
@@ -252,6 +257,7 @@ void cmd_download(char const *arg, user_t const *user, int sockfd)
     } while (!feof(fileptr) && bufflen > 0);
 
     fclose(fileptr);
+    pthread_mutex_unlock(&m);
     free(buffer);
 }
 
