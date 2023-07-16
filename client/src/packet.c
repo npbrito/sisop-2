@@ -1,6 +1,7 @@
 #include "packet.h"
 #include "util.h"
 #include "wrapper.h"
+#include <stdio.h>
 
 void send_packet(int sockfd, packet_t packet)
 {

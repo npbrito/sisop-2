@@ -38,9 +38,7 @@ int main(int argc, char *argv[argc + 1])
 
 static void *handler(void *arg)
 {
-    printf("handler\n");
     conndata_t conndata = *(conndata_t *)arg;
-    printf("conndata\n");
     free(arg);
     Pthread_detach(pthread_self());
     print_client(conndata.cliaddr);
@@ -79,14 +77,12 @@ static void *handler(void *arg)
             break;
         case 3: // Server listen thread
             device = get_device_by_id(&(client->devices), device_id);
-            device->servconn = conndata;
-            // TODO: Think about this!
+            device->servconn = conndata;        
             break;
         default:
             err_quit("Invalid connection ID.");
     }
 
-    printf("before while\n");
 
     while (true)
     {

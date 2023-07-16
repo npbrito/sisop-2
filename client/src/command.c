@@ -21,7 +21,11 @@ cmd_t dispatch_table[] = {
     CMD(delete, "sync_dir", 1),
     CMD(list_server, "sync_dir", 0),
     CMD(list_client, "sync_dir", 0),
-    CMD(exit, "sync_dir", 0)};
+    CMD(exit, "sync_dir", 0),
+
+    CMD(receive_upload, "sync_dir", 1),
+    CMD(receive_delete, "sync_dir", 1)
+    };
 
 void progress_bar(float progress)
 {
@@ -170,7 +174,6 @@ void cmd_download(int sockfd, char const *userdir, char const *arg)
     char path[256];
     sprintf(buff, "download %s", arg);
     send_command(sockfd, buff);
-    printf("download command with %s as argument\n", arg);
 
     packet_t packet = recv_packet(sockfd);
 
@@ -197,14 +200,12 @@ void cmd_delete(int sockfd, char const *userdir, char const *arg)
     char buff[MAXLINE];
     sprintf(buff, "delete %s", arg);
     send_command(sockfd, buff);
-    printf("delete command with %s as argument\n", arg);
 }
 
 void cmd_list_server(int sockfd, char const *userdir, char const *arg)
 {
     char *cmd = "list_server";
     send_command(sockfd, cmd);
-    printf("list_server command\n");
 
     // Headers
     packet_t packet = recv_packet(sockfd);
@@ -220,8 +221,6 @@ void cmd_list_server(int sockfd, char const *userdir, char const *arg)
 
 void cmd_list_client(int sockfd, char const *userdir, char const *arg)
 {
-    printf("list_client command on %s\n", userdir);
-
     char path[256];
     DIR *dir;
     struct dirent *dp;
@@ -268,14 +267,38 @@ void cmd_list_client(int sockfd, char const *userdir, char const *arg)
     }
 }
 
-void receive_upload()
+void cmd_receive_upload(int sockfd, char const* dir, char const* arg)
 {
+    char path[265]; // 256 + sync_dir_
+    strcpy(path, dir);
+    strncat(path, arg, sizeof(path) - strlen(path) - 1);
 
+    FILE *fileptr = fopen(path, "wb");
+    if (fileptr == NULL)
+        err_msg("failed to open file");
+
+    packet_t packet = {
+        .type = DATA,
+        .seqn = 0,
+        .max_seqn = 1,
+        .data_length = 0,
+        .data = ""};
+
+    while (packet.seqn <= packet.max_seqn)
+    {
+        packet = recv_packet(sockfd);
+        fwrite(packet.data, sizeof(char), packet.data_length, fileptr);
+    }
+
+    fclose(fileptr);
 }
 
-void receive_download()
+void cmd_receive_delete(int sockfd, char const* dir, char const* arg)
 {
-    
+    char path[256];
+    strcpy(path, dir);
+    strncat(path, arg, strlen(arg) + 1);
+    remove(path);
 }
 
 void cmd_exit(int sockfd, char const *userdir, char const *arg)

@@ -10,13 +10,14 @@
 #include "command.h"
 #include "tcputil.h"
 #include "user.h"
+#include "packet.h"
 
 #define BUFSIZE (100 * sizeof(struct inotify_event) + NAME_MAX + 1)
 
 user_t user;
 
 static void *file_system_listener(void *arg);
-// static void *server_listener(void *arg);
+static void *server_listener(void *arg);
 
 int main(int argc, char *argv[argc + 1])
 {
@@ -36,21 +37,21 @@ int main(int argc, char *argv[argc + 1])
     // TODO: get server info
     get_sync_dir(user);
 
-    // int *fssockfd = Malloc(sizeof(int));
-    // *fssockfd = Tcp_connect(argv[3], argv[4]);
-    // send_command(*fssockfd, argv[1]);   // Send username
-    // send_command(*fssockfd, argv[2]);   // Send device_id
-    // send_command(*fssockfd, "2");       // Send client thread id
-    // pthread_t fstid;
-    // Pthread_create(&fstid, NULL, &file_system_listener, &fssockfd);
+    int *fssockfd = Malloc(sizeof(int));
+    *fssockfd = Tcp_connect(argv[3], argv[4]);
+    send_command(*fssockfd, argv[1]);   // Send username
+    send_command(*fssockfd, argv[2]);   // Send device_id
+    send_command(*fssockfd, "2");       // Send client thread id
+    pthread_t fstid;
+    Pthread_create(&fstid, NULL, &file_system_listener, fssockfd);
 
-    // int *servsockfd = Malloc(sizeof(int));
-    // *servsockfd = Tcp_connect(argv[3], argv[4]);
-    // send_command(*servsockfd, argv[1]);   // Send username
-    // send_command(*servsockfd, argv[2]);   // Send device_id
-    // send_command(*servsockfd, "3");       // Send client thread id
-    // pthread_t servtid;
-    // Pthread_create(&servtid, NULL, &server_listener, &servsockfd);
+    int *servsockfd = Malloc(sizeof(int));
+    *servsockfd = Tcp_connect(argv[3], argv[4]);
+    send_command(*servsockfd, argv[1]);   // Send username
+    send_command(*servsockfd, argv[2]);   // Send device_id
+    send_command(*servsockfd, "3");       // Send client thread id
+    pthread_t servtid;
+    Pthread_create(&servtid, NULL, &server_listener, servsockfd);
 
     while (true)
     {
@@ -67,7 +68,9 @@ static void *file_system_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    char dir[] = "./sync_dir/";
+    // 
+    char _dir[] = "./";
+    char* dir = strncat(_dir, user.dir, strlen(user.dir) +1);
     int nfd = inotify_init();
     inotify_add_watch(nfd, dir, IN_CREATE | IN_DELETE | IN_MODIFY);
     char buf[BUFSIZE];
@@ -120,11 +123,16 @@ static void *file_system_listener(void *arg)
     return NULL;
 }
 
-// static void *server_listener(void *arg)
-// {
-//     int sockfd = *(int *)arg;
-//     free(arg);
-//     Pthread_detach(pthread_self());
+static void *server_listener(void *arg)
+{
+    int sockfd = *(int *)arg;
+    free(arg);
+    Pthread_detach(pthread_self());
+    while(true){
+        packet_t packet = recv_packet(sockfd);
+        parse_command(packet.data, user.dir, sockfd);
+        free(packet.data);
+    }
 
-//     return NULL;
-// }
+    return NULL;
+}

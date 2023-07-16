@@ -20,6 +20,7 @@ void cmd_download(char const* arg, user_t const* user, int sockfd);
 void cmd_delete(char const* arg, user_t const* user, int sockfd);
 void cmd_list_server(char const* arg, user_t const* user, int sockfd);
 void cmd_exit(char const* arg, user_t const* user, int sockfd);
-
+void propagate_upload(char const *arg, user_t const *user, int sockfd);
+void propagate_delete(char const *arg, user_t const *user, int sockfd);
 #endif
 

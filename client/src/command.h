@@ -22,5 +22,8 @@ void cmd_list_server(int sockfd, char const* dir, char const* arg);
 void cmd_list_client(int sockfd, char const* dir, char const* arg);
 void cmd_exit(int sockfd, char const* dir, char const* arg);
 
+void cmd_receive_upload(int sockfd, char const* dir, char const* arg);
+void cmd_receive_delete(int sockfd, char const* dir, char const* arg);
+
 #endif
 
