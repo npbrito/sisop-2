@@ -7,19 +7,18 @@
 
 pthread_mutex_t mutex;
 
-user_t save_user(char * username)
+user_t save_user(char *username)
 {
-    size_t len = strlen(username) + 1;   // + 1 because of '\0'
+    size_t len = strlen(username) + 1; // + 1 because of '\0'
 
     user_t user = {
         .username = Malloc(len),
-        .dir = Malloc(strlen(SYNC_DIR) + len)
-    };
+        .dir = Malloc(strlen(SYNC_DIR) + len)};
 
     strncpy(user.username, username, len);
-    strncpy(user.dir, SYNC_DIR, strlen(SYNC_DIR) + 1);              // + 1 because of '\0'
-    strncat(user.dir, user.username, strlen(user.username) + 1);    // + 1 because of '\0'
-    strncat(user.dir, "/", 2); // Adding / to be directory
+    strncpy(user.dir, SYNC_DIR, strlen(SYNC_DIR) + 1);           // + 1 because of '\0'
+    strncat(user.dir, user.username, strlen(user.username) + 1); // + 1 because of '\0'
+    strncat(user.dir, "/", 2);                                   // Adding / to be directory
 
     return user;
 }

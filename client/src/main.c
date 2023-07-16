@@ -39,20 +39,19 @@ int main(int argc, char *argv[argc + 1])
 
     int *fssockfd = Malloc(sizeof(int));
     *fssockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*fssockfd, argv[1]);   // Send username
-    send_command(*fssockfd, argv[2]);   // Send device_id
-    send_command(*fssockfd, "2");       // Send client thread id
+    send_command(*fssockfd, argv[1]); // Send username
+    send_command(*fssockfd, argv[2]); // Send device_id
+    send_command(*fssockfd, "2");     // Send client thread id
     pthread_t fstid;
     Pthread_create(&fstid, NULL, &file_system_listener, fssockfd);
-
     int *servsockfd = Malloc(sizeof(int));
     *servsockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*servsockfd, argv[1]);   // Send username
-    send_command(*servsockfd, argv[2]);   // Send device_id
-    send_command(*servsockfd, "3");       // Send client thread id
+    send_command(*servsockfd, argv[1]); // Send username
+    send_command(*servsockfd, argv[2]); // Send device_id
+    send_command(*servsockfd, "3");     // Send client thread id
     pthread_t servtid;
     Pthread_create(&servtid, NULL, &server_listener, servsockfd);
-
+    sync_files(cmdsockfd, user.dir);
     while (true)
     {
         char *cmd = read_command();
@@ -68,9 +67,9 @@ static void *file_system_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    // 
+    //
     char _dir[] = "./";
-    char* dir = strncat(_dir, user.dir, strlen(user.dir) +1);
+    char *dir = strncat(_dir, user.dir, strlen(user.dir) + 1);
     int nfd = inotify_init();
     inotify_add_watch(nfd, dir, IN_CREATE | IN_DELETE | IN_MODIFY);
     char buf[BUFSIZE];
@@ -128,7 +127,8 @@ static void *server_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    while(true){
+    while (true)
+    {
         packet_t packet = recv_packet(sockfd);
         parse_command(packet.data, user.dir, sockfd);
         free(packet.data);

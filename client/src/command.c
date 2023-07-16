@@ -24,8 +24,7 @@ cmd_t dispatch_table[] = {
     CMD(exit, "sync_dir", 0),
 
     CMD(receive_upload, "sync_dir", 1),
-    CMD(receive_delete, "sync_dir", 1)
-    };
+    CMD(receive_delete, "sync_dir", 1)};
 
 void progress_bar(float progress)
 {
@@ -273,7 +272,41 @@ void cmd_list_client(int sockfd, char const *userdir, char const *arg)
     }
 }
 
-void cmd_receive_upload(int sockfd, char const* dir, char const* arg)
+void sync_files(int sockfd, char const *userdir)
+{
+    char path[256];
+    DIR *dir;
+    struct dirent *dp;
+    struct stat statbuf;
+
+    strncpy(path, "./", 3);
+    strncat(path, userdir, strlen(userdir) + 1);
+    dir = opendir(path);
+
+    while ((dp = readdir(dir)) != NULL)
+    {
+        // Ignore special directories
+        if (strncmp(dp->d_name, ".", 1) == 0 || strncmp(dp->d_name, "..", 2) == 0)
+            continue;
+
+        char *full_path = malloc(strlen(path) + strlen(dp->d_name) + 2); // +2 for the slash and null character
+        strncpy(full_path, path, strlen(path) + 1);
+        strncat(full_path, dp->d_name, strlen(dp->d_name) + 1);
+
+        if (stat(full_path, &statbuf) == -1)
+            continue;
+
+        // Send packet
+        char *path = userdir;
+        strcat(path, dp->d_name);
+        printf("Nome: %s\n", path);
+        cmd_upload(sockfd, userdir, path);
+        // path = userdir;
+        free(full_path);
+    }
+}
+
+void cmd_receive_upload(int sockfd, char const *dir, char const *arg)
 {
     char path[265]; // 256 + sync_dir_
     strcpy(path, dir);
@@ -298,7 +331,7 @@ void cmd_receive_upload(int sockfd, char const* dir, char const* arg)
     fclose(fileptr);
 }
 
-void cmd_receive_delete(int sockfd, char const* dir, char const* arg)
+void cmd_receive_delete(int sockfd, char const *dir, char const *arg)
 {
     char path[256];
     strcpy(path, dir);
