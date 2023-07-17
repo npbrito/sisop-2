@@ -79,6 +79,62 @@ void progress_bar(float progress)
         fprintf(stdout, "\n");
 }
 
+void send_upload(char const *arg, user_t const *user, int sockfd)
+{
+    pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_lock(&file_mutex);
+    FILE *fileptr;
+    size_t file_size;
+    char path[256];
+    strcpy(path, user->dir);
+    strncat(path, arg, strlen(arg) + 1);
+    char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
+    char cmd[MAXLINE];
+
+    int seq = 1;
+    int max_seq;
+
+    if (!check_file_exists(path))
+        err_msg("file does not exist");
+
+    fileptr = fopen(path, "rb");
+    if (fileptr == NULL)
+        err_msg("failed to open file");
+
+    // get file size
+    fseek(fileptr, 0, SEEK_END);
+    file_size = ftell(fileptr);
+    rewind(fileptr);
+
+    sprintf(cmd, "receive_upload %s", arg);
+    send_command(sockfd, cmd);
+
+    max_seq = file_size / MAX_DATA_SIZE;
+
+    size_t bufflen;
+    fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", arg, file_size, file_size / MAX_DATA_SIZE);
+
+    do
+    {
+        bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE - strlen("receive_upload "), fileptr);
+        // Send custom packet with characters read
+        packet_t packet = {
+            .type = DATA,
+            .seqn = seq,
+            .max_seqn = max_seq,
+            .data_length = bufflen,
+            .data = buffer};
+
+        Writen(sockfd, &packet, 4 * sizeof(uint32_t));
+        Writen(sockfd, packet.data, packet.data_length);
+        seq++;
+    } while (!feof(fileptr) && bufflen > 0);
+
+    fclose(fileptr);
+    pthread_mutex_unlock(&file_mutex);
+    free(buffer);
+}
+
 void propagate_upload(char const *arg, user_t const *user, int sockfd)
 {
     client_t *client = get_client_by_user(clients, user->username);
@@ -89,59 +145,7 @@ void propagate_upload(char const *arg, user_t const *user, int sockfd)
 
     for (int i = 0; i < device_count; i++)
     {
-        FILE *fileptr;
-        size_t file_size;
-        char path[256];
-        strcpy(path, user->dir);
-        strncat(path, arg, strlen(arg) + 1);
-        char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
-        char cmd[MAXLINE];
-
-        int seq = 1;
-        int max_seq;
-
-        if (!check_file_exists(path))
-            err_msg("file does not exist");
-
-        fileptr = fopen(path, "rb");
-        if (fileptr == NULL)
-            err_msg("failed to open file");
-
-        // get file size
-        fseek(fileptr, 0, SEEK_END);
-        file_size = ftell(fileptr);
-        rewind(fileptr);
-
-        sprintf(cmd, "receive_upload %s", arg);
-        send_command(current_device->servconn.connfd, cmd);
-
-        max_seq = file_size / MAX_DATA_SIZE;
-
-        size_t bufflen;
-        fprintf(stdout, "Uploading: %s // Size: %ld // Num of packets: %ld\n", arg, file_size, file_size / MAX_DATA_SIZE);
-
-        do
-        {
-            bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE - strlen("receive_upload "), fileptr);
-            // upload progress
-            download_progress = (float)ftell(fileptr) / file_size;
-            progress_bar(download_progress);
-            // Send custom packet with characters read
-            packet_t packet = {
-                .type = DATA,
-                .seqn = seq,
-                .max_seqn = max_seq,
-                .data_length = bufflen,
-                .data = buffer};
-
-            Writen(current_device->servconn.connfd, &packet, 4 * sizeof(uint32_t));
-            Writen(current_device->servconn.connfd, packet.data, packet.data_length);
-            seq++;
-        } while (!feof(fileptr) && bufflen > 0);
-
-        fclose(fileptr);
-        free(buffer);
-
+        send_upload(arg, user, current_device->servconn.connfd);
         current_device = current_device->next;
     }
 }
@@ -205,7 +209,6 @@ void cmd_download(char const *arg, user_t const *user, int sockfd)
     char cmd[MAXLINE];
     float download_progress = 0.0;
     pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
-
 
     // Verify if file exists
     if (!check_file_exists(path))

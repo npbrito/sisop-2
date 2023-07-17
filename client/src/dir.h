@@ -4,6 +4,7 @@
 #include <sys/stat.h>
 
 static const char SYNC_DIR[] = "sync_dir_";
+extern pthread_mutex_t file_mutex;
 
 typedef struct stat stat_t;
 

@@ -10,11 +10,13 @@
 #include "command.h"
 #include "tcputil.h"
 #include "user.h"
+#include "dir.h"
 #include "packet.h"
 
 #define BUFSIZE (100 * sizeof(struct inotify_event) + NAME_MAX + 1)
 
 user_t user;
+pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void *file_system_listener(void *arg);
 static void *server_listener(void *arg);
@@ -77,6 +79,7 @@ static void *file_system_listener(void *arg)
 
     while (true)
     {
+        printf("INOTIFY \n")
         ssize_t len = read(nfd, buf, sizeof buf);
         struct inotify_event *event;
 
@@ -84,13 +87,16 @@ static void *file_system_listener(void *arg)
              ptr += sizeof(struct inotify_event) + event->len)
         {
 
+            Pthread_mutex_lock(&file_mutex);
             event = (struct inotify_event *)ptr;
             char cmd_arg[MAXLINE];
+            Pthread_mutex_unlock(&file_mutex);
 
             if (event->mask & IN_CREATE)
             {
                 strcat(cmd_arg, dir);
                 strcat(cmd_arg, event->name);
+                // Prevent loops when receiving new files
                 cmd_upload(sockfd, cmd_arg, user.dir);
             }
 
@@ -107,7 +113,9 @@ static void *file_system_listener(void *arg)
                 cmd_arg[0] = '\0';
                 strcat(cmd_arg, dir);
                 strcat(cmd_arg, event->name);
+                Pthread_mutex_lock(&file_mutex);
                 cmd_upload(sockfd, cmd_arg, user.dir);
+                Pthread_mutex_unlock(&file_mutex);
             }
 
             cmd_arg[0] = '\0';

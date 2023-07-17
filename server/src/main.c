@@ -8,7 +8,6 @@
 #include "packet.h"
 #include "user.h"
 #include "command.h"
-#include "data.h"
 #include <unistd.h>
 #include <stdio.h>
 
@@ -68,8 +67,8 @@ static void *handler(void *arg)
                     add_device(&(client->devices), device_id, conndata);
                 }
             }
-            get_sync_dir(user);
             send_device_auth(conndata.connfd);
+            // get_sync_dir(user, conndata.connfd);
             break;
         case 2: // File system listen thread
             device = get_device_by_id(&(client->devices), device_id);
