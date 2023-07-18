@@ -278,11 +278,13 @@ void cmd_list_client(int sockfd, char const *userdir, char const *arg)
 
 void cmd_receive_upload(int sockfd, char const *dir, char const *arg)
 {
+    printf("Recebe no %s, %s\n", dir, arg);
     char path[265]; // 256 + sync_dir_
     strcpy(path, dir);
     strncat(path, arg, sizeof(path) - strlen(path) - 1);
 
     Pthread_mutex_lock(&file_mutex);
+    printf("Entra no mutex\n");
     FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
         err_msg("failed to open file");

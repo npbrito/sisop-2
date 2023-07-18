@@ -41,17 +41,17 @@ int main(int argc, char *argv[argc + 1])
 
     int *fssockfd = Malloc(sizeof(int));
     *fssockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*fssockfd, argv[1]);   // Send username
-    send_command(*fssockfd, argv[2]);   // Send device_id
-    send_command(*fssockfd, "2");       // Send client thread id
+    send_command(*fssockfd, argv[1]); // Send username
+    send_command(*fssockfd, argv[2]); // Send device_id
+    send_command(*fssockfd, "2");     // Send client thread id
     pthread_t fstid;
     Pthread_create(&fstid, NULL, &file_system_listener, fssockfd);
 
     int *servsockfd = Malloc(sizeof(int));
     *servsockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*servsockfd, argv[1]);   // Send username
-    send_command(*servsockfd, argv[2]);   // Send device_id
-    send_command(*servsockfd, "3");       // Send client thread id
+    send_command(*servsockfd, argv[1]); // Send username
+    send_command(*servsockfd, argv[2]); // Send device_id
+    send_command(*servsockfd, "3");     // Send client thread id
     pthread_t servtid;
     Pthread_create(&servtid, NULL, &server_listener, servsockfd);
 
@@ -70,27 +70,23 @@ static void *file_system_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    // 
+    //
     char _dir[] = "./";
-    char* dir = strncat(_dir, user.dir, strlen(user.dir) +1);
+    char *dir = strncat(_dir, user.dir, strlen(user.dir) + 1);
     int nfd = inotify_init();
     inotify_add_watch(nfd, dir, IN_CREATE | IN_DELETE | IN_MODIFY);
     char buf[BUFSIZE];
 
     while (true)
     {
-        printf("INOTIFY \n")
         ssize_t len = read(nfd, buf, sizeof buf);
         struct inotify_event *event;
 
         for (char *ptr = buf; ptr < buf + len;
              ptr += sizeof(struct inotify_event) + event->len)
         {
-
-            Pthread_mutex_lock(&file_mutex);
             event = (struct inotify_event *)ptr;
             char cmd_arg[MAXLINE];
-            Pthread_mutex_unlock(&file_mutex);
 
             if (event->mask & IN_CREATE)
             {
@@ -119,12 +115,6 @@ static void *file_system_listener(void *arg)
             }
 
             cmd_arg[0] = '\0';
-
-            // char cmd[] = "list_server";
-            // char cmd[] = "upload ../../client/sync_dir/";
-            // strcat(cmd, event->name);
-            // printf("%s", cmd);
-            // parse_command(cmd, sockfd);
         }
     }
 
@@ -136,7 +126,8 @@ static void *server_listener(void *arg)
     int sockfd = *(int *)arg;
     free(arg);
     Pthread_detach(pthread_self());
-    while(true){
+    while (true)
+    {
         packet_t packet = recv_packet(sockfd);
         parse_command(packet.data, user.dir, sockfd);
         free(packet.data);

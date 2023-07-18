@@ -45,43 +45,45 @@ static void *handler(void *arg)
     uint32_t device_id = recv_id(conndata.connfd);
     uint32_t clithread_id = recv_id(conndata.connfd);
     client_t *client = get_client_by_user(clients, user.username);
-    device_t* device;
+    device_t *device;
 
-    switch (clithread_id) {
-        case 1: // Command line thread
-            if (client == NULL)
+    switch (clithread_id)
+    {
+    case 1: // Command line thread
+        if (client == NULL)
+        {
+            device_t device = {
+                .id = device_id,
+                .cmdconn = conndata,
+                .next = NULL};
+
+            add_client(&clients, user, device);
+        }
+        else
+        {
+            int device_count = get_device_count(&(client->devices));
+
+            if (device_count > 1)
+                goto cleanup;
+            else
             {
-                device_t device = {
-                    .id = device_id,
-                    .cmdconn = conndata,
-                    .next = NULL
-                };
-
-                add_client(&clients, user, device);
-            } else {
-                int device_count = get_device_count(&(client->devices));
-                
-                if (device_count > 1) 
-                    goto cleanup;
-                else {
-                    add_device(&(client->devices), device_id, conndata);
-                }
+                add_device(&(client->devices), device_id, conndata);
             }
-            send_device_auth(conndata.connfd);
-            // get_sync_dir(user, conndata.connfd);
-            break;
-        case 2: // File system listen thread
-            device = get_device_by_id(&(client->devices), device_id);
-            device->fsconn = conndata;
-            break;
-        case 3: // Server listen thread
-            device = get_device_by_id(&(client->devices), device_id);
-            device->servconn = conndata;        
-            break;
-        default:
-            err_quit("Invalid connection ID.");
+        }
+        send_device_auth(conndata.connfd);
+        get_sync_dir(&user, conndata.connfd);
+        break;
+    case 2: // File system listen thread
+        device = get_device_by_id(&(client->devices), device_id);
+        device->fsconn = conndata;
+        break;
+    case 3: // Server listen thread
+        device = get_device_by_id(&(client->devices), device_id);
+        device->servconn = conndata;
+        break;
+    default:
+        err_quit("Invalid connection ID.");
     }
-
 
     while (true)
     {
