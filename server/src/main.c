@@ -14,8 +14,6 @@
 
 static void *handler(void *arg);
 
-client_t *clients = NULL;
-
 int main(int argc, char *argv[argc + 1])
 {
     int listenfd;
@@ -48,6 +46,7 @@ static void *handler(void *arg)
     user_t user = recv_user(conndata.connfd);
     uint32_t device_id = recv_id(conndata.connfd);
     uint32_t clithread_id = recv_id(conndata.connfd);
+    client_t *clients = get_clients_list();
     client_t *client = get_client_by_user(clients, user.username);
     device_t* device;
 
@@ -90,7 +89,7 @@ static void *handler(void *arg)
     while (true)
     {
         packet_t packet = recv_packet(conndata.connfd);
-        parse_command(packet.data, conndata.connfd);
+        parse_command(packet.data, conndata.connfd, &user, device_id);
         free(packet.data);
     }
 

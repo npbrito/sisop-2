@@ -5,6 +5,8 @@
 #include "sockutil.h"
 #include "wrapper.h"
 
+client_t *clients = NULL;
+
 void print_server(int listenfd)
 {
 	struct sockaddr_in servaddr;
@@ -25,16 +27,16 @@ void print_server(int listenfd)
 
 	char buff[MAXLINE];
 	printf("Server listening on IP: %s PORT: %hu\n",
-		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
-		   port);
+				 Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+				 port);
 }
 
 void print_client(struct sockaddr_in cliaddr)
 {
 	char buff[MAXLINE];
 	printf("Client connecting from IP: %s PORT: %hu\n",
-		   Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
-		   ntohs(cliaddr.sin_port));
+				 Inet_ntop(AF_INET, &cliaddr.sin_addr, buff, sizeof buff),
+				 ntohs(cliaddr.sin_port));
 }
 
 conndata_t *accept_connection(int listenfd)
@@ -58,7 +60,7 @@ void handle_connection(conndata_t *conndata, void *(*handler)(void *))
 void add_client(client_t **head, user_t user, device_t device)
 {
 	if (*head == NULL)
-	{	
+	{
 		*head = Malloc(sizeof(client_t));
 		(*head)->user = user;
 		(*head)->devices = device;
@@ -76,6 +78,11 @@ void add_client(client_t **head, user_t user, device_t device)
 		current->next->devices = device;
 		current->next->next = NULL;
 	}
+}
+
+client_t *get_clients_list()
+{
+	return clients;
 }
 
 void add_device(device_t *head, int id, conndata_t cmdconn)
@@ -151,10 +158,47 @@ int get_device_count(device_t *head)
 	device_t *current = head;
 	int count = 0;
 
-	while (current != NULL) {
+	while (current != NULL)
+	{
 		count++;
 		current = current->next;
 	}
 
 	return count;
+}
+
+void remove_device(device_t *head, int id)
+{
+	device_t *current = head;
+	device_t *previous = head;
+	printf("after malloc\n");
+	// current = *head;
+	// previous = *head;
+
+	// Se é primeiro Device
+	if (current != NULL && current->id == id)
+	{
+		head = NULL;
+		printf("head = NULL;\n");
+		free(current);
+		// TODO: remover o client
+		return;
+	}
+
+	while (current != NULL && current->id != id)
+	{
+		previous = current;
+		current = current->next;
+	}
+
+	if (current == NULL)
+	{
+		err_msg("Device not found.\n");
+		return;
+	}
+
+	// Atualiza os ponteiros
+	previous->next = current->next;
+	free(current);
+	printf("Free\n");
 }

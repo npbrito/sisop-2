@@ -6,9 +6,33 @@
 #include "error.h"
 #include "command.h"
 #include "tcputil.h"
+#include "user.h"
 
-static void *file_system_listener(void *arg);
-//static void *server_listener(void *arg);
+user_t user;
+
+// TODO:
+// Thread do INotify
+static void *file_system_listener(void *arg)
+{
+    int sockfd = *(int *)arg;
+    free(arg);
+    Pthread_detach(pthread_self());
+
+    // Code for inotify, etc goes here!
+    // Monitor local file system events in sync_dir here!
+
+    return NULL;
+}
+
+// Thread para receber arquivos do servidor
+// static void *server_listener(void *arg)
+// {
+//     int sockfd = *(int *)arg;
+//     free(arg);
+//     Pthread_detach(pthread_self());
+
+//     return NULL;
+// }
 
 int main(int argc, char* argv[argc+1])
 {
@@ -24,13 +48,16 @@ int main(int argc, char* argv[argc+1])
     if (!has_auth)
         err_quit("Too many devices connected for user %s", argv[1]);
 
-    int *fssockfd = Malloc(sizeof(int));
-    *fssockfd = Tcp_connect(argv[3], argv[4]);
-    send_command(*fssockfd, argv[1]);   // Send username
-    send_command(*fssockfd, argv[2]);   // Send device_id
-    send_command(*fssockfd, "2");       // Send client thread id
-    pthread_t fstid;
-    Pthread_create(&fstid, NULL, &file_system_listener, &fssockfd);
+    user = save_user(argv[1]);
+    get_sync_dir(user);
+    // TODO: Fix; Not working
+    // int *fssockfd = Malloc(sizeof(int));
+    // *fssockfd = Tcp_connect(argv[3], argv[4]);
+    // send_command(*fssockfd, argv[1]);   // Send username
+    // send_command(*fssockfd, argv[2]);   // Send device_id
+    // send_command(*fssockfd, "2");       // Send client thread id
+    // pthread_t fstid;
+    // Pthread_create(&fstid, NULL, &file_system_listener, &fssockfd);
 
     // int *servsockfd = Malloc(sizeof(int));
     // *servsockfd = Tcp_connect(argv[3], argv[4]);
@@ -40,6 +67,7 @@ int main(int argc, char* argv[argc+1])
     // pthread_t servtid;
     // Pthread_create(&servtid, NULL, &server_listener, &servsockfd);
 
+    // Thread para escutar linha de comando
     while (true) {
         char* cmd = read_command();
         parse_command(cmd, cmdsockfd);
@@ -48,24 +76,3 @@ int main(int argc, char* argv[argc+1])
 
     return EXIT_SUCCESS;
 }
-
-static void *file_system_listener(void *arg)
-{
-    int sockfd = *(int *)arg;
-    free(arg);
-    Pthread_detach(pthread_self());
-
-    // Code for inotify, etc goes here!
-    // Monitor local file system events in sync_dir here!
-
-    return NULL;
-}
-
-// static void *server_listener(void *arg)
-// {
-//     int sockfd = *(int *)arg;
-//     free(arg);
-//     Pthread_detach(pthread_self());
-
-//     return NULL;
-// }

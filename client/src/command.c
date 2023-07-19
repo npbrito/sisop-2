@@ -111,6 +111,8 @@ void cmd_list_client(int sockfd, char const* arg)
 
 void cmd_exit(int sockfd, char const* arg)
 {
-    Close(sockfd);
-    exit(EXIT_SUCCESS);
+    char* cmd = "exit";
+    send_command(sockfd, cmd);
+    // Close(sockfd);
+    // exit(EXIT_SUCCESS);
 }

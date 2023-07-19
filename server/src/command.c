@@ -4,16 +4,17 @@
 #include "packet.h"
 #include "wrapper.h"
 #include "error.h"
+#include "sockutil.h"
 
 cmd_t dispatch_table[] = {
-    CMD(upload, 1),
-    CMD(download, 1),
-    CMD(delete, 1),
-    CMD(list_server, 0),
-    CMD(exit, 0)
+    CMD(upload, 1, NULL ,1),
+    CMD(download, 1, NULL ,1),
+    CMD(delete, 1, NULL ,1),
+    CMD(list_server, 0, NULL ,1),
+    CMD(exit, 0, NULL, 1)
 };
 
-void parse_command(char* cmdline, int sockfd)
+void parse_command(char* cmdline, int sockfd, user_t* user, int device_id)
 {
     char const* delim = " \n";
     char* saveptr;
@@ -25,7 +26,7 @@ void parse_command(char* cmdline, int sockfd)
 
         if (!strcmp(cmd, current_cmd.name)) {
             char const* arg = strtok_r(NULL, delim, &saveptr);
-            current_cmd.func(arg, sockfd);
+            current_cmd.func(arg, sockfd, user, device_id);
             return;
         }
     }
@@ -49,27 +50,39 @@ void send_device_auth(int sockfd)
     Write(sockfd, "1", sizeof(char));
 }
 
-void cmd_upload(char const* arg, int sockfd)
+void cmd_upload(char const* arg, int sockfd, user_t* user, int device_id)
 {
     printf("upload command with %s as argument\n", arg);
 }
 
-void cmd_download(char const* arg, int sockfd)
+void cmd_download(char const* arg, int sockfd, user_t* user, int device_id)
 {
     printf("download command with %s as argument\n", arg);
 }
 
-void cmd_delete(char const* arg, int sockfd)
+void cmd_delete(char const* arg, int sockfd, user_t* user, int device_id)
 {
     printf("delete command with %s as argument\n", arg);
 }
 
-void cmd_list_server(char const* arg, int sockfd)
+void cmd_list_server(char const* arg, int sockfd, user_t* user, int device_id)
 {
     printf("list_server command\n");
 }
 
-void cmd_exit(char const* arg, int sockfd)
+void cmd_exit(char const* arg, int sockfd, user_t* user, int device_id)
 {
     printf("exit command\n");
+    // TODO: pegatr client da main - global var
+    client_t *clients = get_clients_list();
+    printf("clients \n");
+    client_t *client = get_client_by_user(clients, user->username);
+    
+    printf("-- client get_client_by_user \n");
+    device_t *devices = &(client->devices);
+    printf("--- device_t \n");
+
+    remove_device(devices, device_id);
+    // Send OK to client
+    // Destruir thread
 }

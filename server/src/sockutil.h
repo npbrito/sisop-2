@@ -4,7 +4,6 @@
 #include <stdint.h>
 #include "packet.h"
 #include <errno.h>
-
 #include "user.h"
 
 typedef struct conndata
@@ -40,5 +39,7 @@ void print_client(struct sockaddr_in cliaddr);
 void print_server(int sockfd);
 uint32_t str_to_int(const char *str);
 int get_device_count(device_t *head);
+void remove_device(device_t *head, int id);
+client_t* get_clients_list();
 
 #endif
