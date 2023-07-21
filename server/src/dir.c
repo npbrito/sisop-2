@@ -23,7 +23,6 @@ int check_dir_exists(const char *dir)
   return 0;
 }
 
-
 void create_user_dir(char *username)
 {
   char *dir = malloc((strlen(SYNC_DIR) * sizeof(char)) + ((strlen(username) + 1) * sizeof(char)));
@@ -35,5 +34,17 @@ void create_user_dir(char *username)
     mkdir(SYNC_DIR, 0700);
   }
   free(dir);
+}
 
+int check_file_exists(const char *path)
+{
+  struct stat st;
+  if (stat(path, &st) == 0)
+  {
+    if (S_ISREG(st.st_mode))
+    {
+      return 1;
+    }
+  }
+  return 0;
 }

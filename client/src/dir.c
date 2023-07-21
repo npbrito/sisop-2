@@ -45,3 +45,16 @@ void create_user_dir(char *username)
     err_sys("createUserDir error");
   }
 }
+
+int check_file_exists(const char *path)
+{
+  struct stat st;
+  if (stat(path, &st) == 0)
+  {
+    if (S_ISREG(st.st_mode))
+    {
+      return 1;
+    }
+  }
+  return 0;
+}

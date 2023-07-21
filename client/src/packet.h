@@ -4,6 +4,7 @@
 
 #define COMMAND 1
 #define DATA 2
+#define MAX_DATA_SIZE 1464
 
 typedef struct packet
 {
@@ -15,5 +16,6 @@ typedef struct packet
 } packet_t;
 
 void send_packet(int sockfd, packet_t packet);
+packet_t recv_packet(int sockfd);
 
 #endif
