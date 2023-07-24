@@ -12,22 +12,23 @@ cmd_t dispatch_table[] = {
     CMD(delete, "sync_dir", 1),
     CMD(list_server, "sync_dir", 0),
     CMD(list_client, "sync_dir", 0),
-    CMD(exit, "sync_dir", 0)
-};
+    CMD(exit, "sync_dir", 0)};
 
-void parse_command(char* cmdline, const char *userdir, int sockfd)
+void parse_command(char *cmdline, const char *userdir, int sockfd)
 {
-    char const* delim = " \n";
-    char* saveptr;
-    char const* cmd = strtok_r(cmdline, delim, &saveptr);
+    char const *delim = " \n";
+    char *saveptr;
+    char const *cmd = strtok_r(cmdline, delim, &saveptr);
     size_t num_cmds = sizeof dispatch_table / sizeof dispatch_table[0];
 
-    for (int i = 0; i < num_cmds; i++) {
+    for (int i = 0; i < num_cmds; i++)
+    {
         cmd_t current_cmd = dispatch_table[i];
 
-        if (!strcmp(cmd, current_cmd.name)) {
-            char const* first_arg = strtok_r(NULL, delim, &saveptr);
-            char const* second_arg = strtok_r(NULL, delim, &saveptr);
+        if (!strcmp(cmd, current_cmd.name))
+        {
+            char const *first_arg = strtok_r(NULL, delim, &saveptr);
+            char const *second_arg = strtok_r(NULL, delim, &saveptr);
 
             if (current_cmd.has_arg && first_arg == NULL)
                 err_msg("Too few arguments to command %s", current_cmd.name);
@@ -36,7 +37,7 @@ void parse_command(char* cmdline, const char *userdir, int sockfd)
             else if (!current_cmd.has_arg && first_arg != NULL)
                 err_msg("Too many arguments to command %s", current_cmd.name);
             else
-                current_cmd.func(sockfd, userdir,  first_arg);
+                current_cmd.func(sockfd, userdir, first_arg);
 
             return;
         }
@@ -45,24 +46,23 @@ void parse_command(char* cmdline, const char *userdir, int sockfd)
     err_msg("Unrecognized command %s", cmd);
 }
 
-char* read_command()
+char *read_command()
 {
     size_t len = MAXLINE;
-    char* buff = Malloc(len);
+    char *buff = Malloc(len);
     Getline(&buff, &len, stdin);
 
     return buff;
 }
 
-void send_command(int sockfd, char* str)
+void send_command(int sockfd, char *str)
 {
     packet_t packet = {
         .type = COMMAND,
         .seqn = 1,
         .max_seqn = 1,
-        .data_length = strlen(str) + 1,  // str + '\0',
-        .data = str
-    };
+        .data_length = strlen(str) + 1, // str + '\0',
+        .data = str};
 
     send_packet(sockfd, packet);
 }
@@ -73,15 +73,15 @@ int recv_device_auth(int sockfd)
     return read(sockfd, buff, sizeof(char));
 }
 
-void cmd_upload(int sockfd, char const *userdir, char const* arg)
+void cmd_upload(int sockfd, char const *userdir, char const *arg)
 {
     FILE *fileptr;
     size_t file_size;
     char *filename = strrchr(arg, '/');
     char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
     char cmd[MAXLINE];
-    //float upload_progress = 0.0;
-    // Current packet and max packets
+    // float upload_progress = 0.0;
+    //  Current packet and max packets
     int seq = 1;
     int max_seq;
     pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -120,8 +120,8 @@ void cmd_upload(int sockfd, char const *userdir, char const* arg)
         do
         {
             bufflen = fread(buffer, sizeof(char), MAX_DATA_SIZE, fileptr);
-            //upload_progress = (float)ftell(fileptr) / file_size;
-            //progress_bar(upload_progress);
+            // upload_progress = (float)ftell(fileptr) / file_size;
+            // progress_bar(upload_progress);
 
             // Send custom packet with characters read
             packet_t packet = {
@@ -142,7 +142,7 @@ void cmd_upload(int sockfd, char const *userdir, char const* arg)
     }
 }
 
-void cmd_download(int sockfd, char const *userdir, char const* arg)
+void cmd_download(int sockfd, char const *userdir, char const *arg)
 {
     char buff[MAXLINE];
     char path[256];
@@ -154,7 +154,11 @@ void cmd_download(int sockfd, char const *userdir, char const* arg)
 
     long file_size = strtol(packet.data, NULL, 10);
     strcpy(path, userdir);
+    printf("FilePath: %s\n", path);
+    strcat(path, "/");
+    printf("FilePath: %s\n", path);
     strncat(path, arg, strlen(arg) + 1);
+    printf("FilePath: %s\n", path);
     Pthread_mutex_lock(&m);
     FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
@@ -172,7 +176,6 @@ void cmd_download(int sockfd, char const *userdir, char const* arg)
     fprintf(stdout, "File download complete: %s\n", arg);
 }
 
-
 void cmd_delete(int sockfd, char const *userdir, char const *arg)
 {
     char buff[MAXLINE];
@@ -180,21 +183,21 @@ void cmd_delete(int sockfd, char const *userdir, char const *arg)
     send_command(sockfd, buff);
 }
 
-void cmd_list_server(int sockfd, char const* arg)
+void cmd_list_server(int sockfd, char const *arg)
 {
-    char* cmd = "list_server";
+    char *cmd = "list_server";
     send_command(sockfd, cmd);
     printf("list_server command\n");
 }
 
-void cmd_list_client(int sockfd, char const* arg)
+void cmd_list_client(int sockfd, char const *arg)
 {
     printf("list_client command\n");
 }
 
-void cmd_exit(int sockfd, char const* arg)
+void cmd_exit(int sockfd, char const *arg)
 {
-    char* cmd = "exit";
+    char *cmd = "exit";
     send_command(sockfd, cmd);
     // Close(sockfd);
     // exit(EXIT_SUCCESS);

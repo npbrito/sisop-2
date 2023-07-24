@@ -55,8 +55,9 @@ void cmd_upload(char const *arg, int sockfd, user_t *user, int device_id)
     char path[265]; // 256 + sync_dir_
     pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
     strcpy(path, user->dir);
+    strcat(path, "/");
     strncat(path, arg, sizeof(path) - strlen(path) - 1);
-
+    printf("Filepath: %s\n", path);
     pthread_mutex_lock(&m);
     FILE *fileptr = fopen(path, "wb");
     if (fileptr == NULL)
@@ -72,6 +73,8 @@ void cmd_upload(char const *arg, int sockfd, user_t *user, int device_id)
     while (packet.seqn <= packet.max_seqn)
     {
         packet = recv_packet(sockfd);
+        printf("File: %s\n", fileptr);
+        printf("Filename: %s\n", user->dir);
         fwrite(packet.data, sizeof(char), packet.data_length, fileptr);
     }
 
@@ -89,7 +92,9 @@ void cmd_download(char const *arg, int sockfd, user_t *user, int device_id)
         char path[256];
 
         strcpy(path, user->dir);
+        strcat(path, "/");
         strncat(path, arg, strlen(arg) + 1);
+        printf("FilePath: %s\n", path);
         char *buffer = (char *)malloc(MAX_DATA_SIZE * sizeof(char));
         char cmd[MAXLINE];
         float download_progress = 0.0;
@@ -154,6 +159,8 @@ void cmd_delete(char const *arg, int sockfd, user_t *user, int device_id)
 {
     char path[256];
     strcpy(path, user->dir);
+    strcat(path, "/");
+    printf("FilePath: %s\n", path);
     strncat(path, arg, strlen(arg) + 1);
     remove(path);
     // propagate_delete(arg, user, sockfd);
