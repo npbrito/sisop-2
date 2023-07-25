@@ -103,7 +103,7 @@ int main(int argc, char* argv[argc+1])
         err_quit("Too many devices connected for user %s", argv[1]);
 
     user = save_user(argv[1]);
-    get_sync_dir(user);
+    get_sync_dir(user.dir, cmdsockfd);
     // TODO: Fix; Not working
     int *fssockfd = Malloc(sizeof(int));
     *fssockfd = Tcp_connect(argv[3], argv[4]);

@@ -283,16 +283,10 @@ void cmd_list_server(char const *arg, int sockfd, user_t *user, int device_id)
 void cmd_exit(char const *arg, int sockfd, user_t *user, int device_id)
 {
     printf("exit command\n");
-    // TODO: pegatr client da main - global var
     client_t *clients = get_clients_list();
-    printf("clients \n");
     client_t *client = get_client_by_user(clients, user->username);
 
-    printf("-- client get_client_by_user \n");
     device_t *devices = &(client->devices);
-    printf("--- device_t \n");
-
     remove_device(devices, device_id);
-    // Send OK to client
     // Destruir thread
 }

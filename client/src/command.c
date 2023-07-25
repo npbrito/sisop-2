@@ -199,6 +199,6 @@ void cmd_exit(int sockfd, char const *arg)
 {
     char *cmd = "exit";
     send_command(sockfd, cmd);
-    // Close(sockfd);
-    // exit(EXIT_SUCCESS);
+    Close(sockfd);
+    exit(EXIT_SUCCESS);
 }

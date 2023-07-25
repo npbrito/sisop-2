@@ -78,6 +78,7 @@ void add_client(client_t **head, user_t user, device_t device)
 		current->next->devices = device;
 		current->next->next = NULL;
 	}
+	clients = *head;
 }
 
 client_t *get_clients_list()
@@ -170,31 +171,27 @@ int get_device_count(device_t *head)
 void remove_device(device_t *head, int id)
 {
 	device_t *current = head;
-	device_t *previous = head;
-	printf("after malloc\n");
-	// current = *head;
-	// previous = *head;
-
-	// Se é primeiro Device
-	if (current != NULL && current->id == id)
-	{
-		head = NULL;
-		printf("head = NULL;\n");
-		free(current);
-		// TODO: remover o client
-		return;
-	}
-
-	while (current != NULL && current->id != id)
-	{
-		previous = current;
-		current = current->next;
-	}
+	device_t *previous = NULL;
 
 	if (current == NULL)
 	{
 		err_msg("Device not found.\n");
 		return;
+	}
+	
+	// Se é primeiro Device
+	if (current != NULL && current->id == id)
+	{
+		printf("REMOVE LOGS: device is first of list\n");
+		head = NULL;
+		return;
+	}
+
+	while (current != NULL && current->id != id)
+	{
+		printf("REMOVE LOGS: device is in the middle\n");
+		previous = current;
+		current = current->next;
 	}
 
 	// Atualiza os ponteiros
