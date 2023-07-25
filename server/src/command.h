@@ -23,5 +23,7 @@ void cmd_delete(char const* arg, int sockfd, user_t* user, int device_id);
 void cmd_list_server(char const* arg, int sockfd, user_t* user, int device_id);
 void cmd_exit(char const* arg, int sockfd, user_t* user, int device_id);
 
+void propagate_upload(char const *arg, user_t *user);
+
 #endif
 

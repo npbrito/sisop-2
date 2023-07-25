@@ -5,7 +5,7 @@
 #define COMMAND 1
 #define DATA 2
 #define MAX_DATA_SIZE 1464
-
+#define KBYTE 1024
 typedef struct packet
 {
     uint32_t type;
